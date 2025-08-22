@@ -89,7 +89,7 @@ footer{color:var(--muted);text-align:center;padding:30px 0}
 /* 🔹 Napis StreamingHub w prawym górnym rogu */
 .top-brand {
   position: fixed;
-  top: 1px;
+  top: 10px;
   right: 12px;
   font-size: 14px;
   font-weight: bold;
@@ -157,8 +157,8 @@ footer{color:var(--muted);text-align:center;padding:30px 0}
 
 <footer>© <script>document.write(new Date().getFullYear())
 // 🔹 Funkcja otwierająca edycję filmu
-function editMovie(index) {
-  const movies = JSON.parse(localStorage.getItem("movies") || "[]");
+async function editMovie(index) {
+ const { data: movies, error } = await db.from("movies").select("*");
   const movie = movies[index];
   if (!movie) return alert("Film nie istnieje");
 
@@ -889,32 +889,70 @@ UI.show('home');
   // ⬇️ TO jest właściwe dla wersji CDN/global
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  async function loadMovies() {
-    const { data, error } = await db.from("movies").select("*");
-    if (error) {
-      console.error("Błąd:", error);
-      return;
-    }
-    console.log("📺 Filmy z Supabase:", data);
-    const container = document.getElementById("movies-container");
-    container.innerHTML = "";
-    data.forEach(movie => {
-      const div = document.createElement("div");
-      div.className = "movie-card";
-      div.innerHTML = `
-        <h3>${movie.title}</h3>
-        <img src="${movie.thumbnail_url}" width="200">
-        <p>Rok: ${movie.year}, Czas: ${movie.duration} min</p>
-      `;
-      container.appendChild(div);
-    });
+async function loadMovies() {
+  const category = document.getElementById("filterCategory").value;
+  const year = document.getElementById("filterYear").value;
+  const lengthMin = document.getElementById("filterLength").value;
+  const sort = document.getElementById("filterSort").value;
+  const search = document.getElementById("filterSearch").value;
+
+  let query = db.from("movies").select("*");
+
+  if (category) query = query.eq("category_id", category);
+  if (year) query = query.eq("year", year);
+  if (lengthMin) query = query.gte("duration", lengthMin);
+  if (search) query = query.ilike("title", `%${search}%`);
+
+  if (sort === "rating") query = query.order("rating", { ascending: false });
+  else if (sort === "title") query = query.order("title", { ascending: true });
+  else if (sort === "year") query = query.order("year", { ascending: false });
+  else query = query.order("created_at", { ascending: false });
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("❌ Błąd:", error);
+    return;
   }
+
+  const container = document.getElementById("movies-container");
+  container.innerHTML = "";
+
+  data.forEach(movie => {
+    const div = document.createElement("div");
+    div.className = "movie-card";
+    div.innerHTML = `
+      <h3>${movie.title}</h3>
+      <img src="${movie.thumbnail_url}" width="200">
+      <p>Rok: ${movie.year}, Czas: ${movie.duration} min</p>
+      <p>⭐ Ocena: ${movie.rating || "Brak"}</p>
+    `;
+    container.appendChild(div);
+  });
+}
+
+
+  console.log("🎬 Filmy z Bazy danych:", data);
+
+  const container = document.getElementById("movies-container");
+  container.innerHTML = "";
+
+  data.forEach(movie => {
+    const div = document.createElement("div");
+    div.className = "movie-card";
+    div.innerHTML = `
+      <h3>${movie.title}</h3>
+      <img src="${movie.thumbnail_url}" width="200">
+      <p>Rok: ${movie.year || "?"}, Czas: ${movie.duration || "?"} min</p>
+    `;
+    container.appendChild(div);
+  });
+
 
     // --- Twój kod JS do pobierania z Supabase ---
     document.addEventListener("DOMContentLoaded", loadMovies);
   </script>
   <section id="movies">
-    <h2>🎬 Filmy z bazy</h2>
     <div id="movies-container"></div>
   </section>
 
