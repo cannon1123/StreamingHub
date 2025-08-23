@@ -349,6 +349,36 @@ $('#q').addEventListener('input', applyFilters);
     document.getElementById(id).addEventListener('change', applyFilters);
   });
 })();
+// 🎬 Pobieranie filmów z Supabase
+async function loadMovies() {
+  const { data: movies, error } = await db
+    .from("movies")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Błąd filmów:", error);
+    return;
+  }
+
+  const { data: ratings } = await db
+    .from("ratings")
+    .select("movie_id, avg(score)")
+    .group("movie_id");
+
+  let moviesWithRatings = movies.map(m => {
+    const r = ratings ? ratings.find(r => r.movie_id === m.id) : null;
+    return { ...m, avg_rating: r ? r.avg : 0 };
+  });
+
+  renderMovies("recommended", [...movies].sort((a,b)=>b.points_required - a.points_required).slice(0,5));
+  renderMovies("new", movies.slice(0,5));
+  renderMovies("toprated", moviesWithRatings.sort((a,b)=>b.avg_rating - a.avg_rating).slice(0,5));
+}
+
+// 🚀 Wywołaj przy starcie
+loadMovies();
+
 </script>
 </body>
 </html>
