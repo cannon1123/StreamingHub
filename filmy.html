@@ -62,20 +62,28 @@
   </style>
 </head>
 <body>
-  <header>
-    <div class="brand">
-      <div class="logo">🎬 StreamingHub</div>
-      <div class="search">
-        <input id="searchInput" placeholder="Szukaj filmów..." />
-      </div>
-    </div>
-    <nav>
-      <span onclick="showPage('filmy')">Filmy</span>
-      <span onclick="showPage('top')">TOP 10</span>
-      <span onclick="showPage('biblioteka')">Moja biblioteka</span>
-      <span class="btn" onclick="logout()">Wyloguj</span>
-    </nav>
-  </header>
+<header>
+  <h1>🎬 StreamingHub</h1>
+  <div class="nav">
+    <input type="text" id="searchInput" placeholder="Szukaj filmów...">
+    <select id="filterCategory" onchange="loadMovies()">
+      <option value="">Kategoria</option>
+    </select>
+    <select id="filterYear" onchange="loadMovies()">
+      <option value="">Rok</option>
+    </select>
+    <select id="filterSort" onchange="loadMovies()">
+      <option value="created_at">Sortuj: Najnowsze</option>
+      <option value="rating">Sortuj: Ocena</option>
+      <option value="year">Sortuj: Rok</option>
+      <option value="title">Sortuj: Tytuł</option>
+    </select>
+    <span onclick="showPage('filmy')">Filmy</span>
+    <span onclick="showPage('top')">TOP 10</span>
+    <span onclick="showPage('biblioteka')">Moja biblioteka</span>
+    <span onclick="logout()">Wyloguj</span>
+  </div>
+</header>
 
   <div class="container">
     <!-- Wyniki wyszukiwania -->
