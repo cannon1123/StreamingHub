@@ -439,13 +439,13 @@ async function loadMovies() {
   });
 
   // 🎯 Polecane = filmy z największą ilością punktów wymaganych
-  renderMovies("recommended", [...movies].sort((a,b)=>b.points_required - a.points_required).slice(0,5));
+  renderMovies("list-recommended", [...movies].sort((a,b)=>b.points_required - a.points_required).slice(0,5));
 
   // 🆕 Nowo dodane = wg daty dodania
-  renderMovies("new", movies.slice(0,5));
+  renderMovies("list-new", movies.slice(0,5));
 
   // ⭐ Najwyżej oceniane
-  renderMovies("top", moviesWithRatings.sort((a,b)=>b.avg_rating - a.avg_rating).slice(0,5));
+  renderMovies("list-top", moviesWithRatings.sort((a,b)=>b.avg_rating - a.avg_rating).slice(0,5));
 }
 
 </script>
