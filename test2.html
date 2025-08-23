@@ -240,6 +240,8 @@ async function loadHome(){
 //  $('#list-recommended').innerHTML = recommended.map(m=>card(m, avg)).join('');
 //  $('#list-new').innerHTML = newest.map(m=>card(m, avg)).join('');
 //  $('#list-top').innerHTML = top.map(m=>card(m, avg)).join('');
+$('#list-filtered').innerHTML = '';
+
 
   // TOP10 (mix: 60% ocena, 40% popularność)
   const mixScore = m => ( (avg[m.id]||0)*0.6 + (pop[m.id]||0)*0.4 );
@@ -248,29 +250,36 @@ async function loadHome(){
 }
 
 /* ==== Filtrowanie/sortowanie + wyszukiwarka (góra strony) ==== */
-async function applyFilters(){
-  const q = $('#q').value.trim().toLowerCase();
-  const cat = $('#f-category').value;
-  const year = $('#f-year').value;
-  const min = $('#f-min').value;
-  const sort = $('#f-sort').value;
+function applyFilters() {
+  const q = $('#q').value.toLowerCase();
+  const year = $('#year').value;
+  const category = $('#category').value;
+  const minDuration = $('#duration').value;
+  const sort = $('#sort').value;
 
-  const [movies, ratings, history] = await Promise.all([fetchAllMovies(), fetchRatings(), fetchHistory()]);
-  const avg = computeAverages(movies, ratings);
-  const pop = computePopularity(movies, history);
+  // jeśli nic nie wpisano → ukryj sekcję wyników
+  if (!q && !year && !category && !minDuration) {
+    $('#filtered-section').style.display = 'none';
+    return;
+  }
 
-  let list = movies.filter(m => {
-    if(q && !String(m.title||'').toLowerCase().includes(q)) return false;
-    if(cat && String(m.category_id) !== String(cat)) return false;
-    if(year && String(m.year) !== String(year)) return false;
-    if(min && Number(m.duration||0) < Number(min)) return false;
-    return true;
-  });
+  $('#filtered-section').style.display = 'block';
+  $('#list-filtered').innerHTML = '';
 
-  if(sort==='rating') list.sort((a,b)=> ( (avg[b.id]||0)-(avg[a.id]||0) ));
-  if(sort==='new') list.sort((a,b)=> new Date(b.created_at) - new Date(a.created_at));
-  if(sort==='year') list.sort((a,b)=> (b.year||0) - (a.year||0));
-  if(sort==='popular') list.sort((a,b)=> ( (pop[b.id]||0) - (pop[a.id]||0) ));
+  let results = [...allMovies];
+
+  if (q) results = results.filter(m => m.title.toLowerCase().includes(q));
+  if (year) results = results.filter(m => m.year == year);
+  if (category) results = results.filter(m => m.category_id == category);
+  if (minDuration) results = results.filter(m => m.duration >= minDuration);
+
+  if (sort === 'rating') results.sort((a,b)=>b.avg_rating-a.avg_rating);
+  if (sort === 'year') results.sort((a,b)=>b.year-a.year);
+  if (sort === 'duration') results.sort((a,b)=>b.duration-a.duration);
+
+  renderMovies('list-filtered', results);
+}
+
 
   // 🔥 pokaż tylko wyniki filtrowania
   $('#list-results').innerHTML = list.length 
@@ -281,7 +290,7 @@ async function applyFilters(){
   $('#list-recommended').innerHTML = '';
   $('#list-new').innerHTML = '';
   $('#list-top').innerHTML = '';
-}
+
 
 /* ==== Szczegóły filmu + odtwarzacz ==== */
 async function openMovie(id){
