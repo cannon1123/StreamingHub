@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🎬StreamingHub filmy</title>
+  <!-- Tailwind CDN (no build needed) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/lucide-static@0.321.0/font/lucide.css" />
+  <!-- Supabase JS v2 -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <style>
+    /* custom scrollbars */
+    ::-webkit-scrollbar{height:10px;width:10px}::-webkit-scrollbar-thumb{background:#303030;border-radius:8px}
+    .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .modal-bg{background:rgba(0,0,0,.6)}
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen">
+  <!-- ================= HEADER ================= -->
+  <header class="sticky top-0 z-40 backdrop-blur bg-zinc-950/70 border-b border-zinc-900">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center gap-3">
+      <span class="text-2xl">🎬</span>
+      <h1 class="text-xl font-semibold">Mini Netflix</h1>
+      <nav class="ml-6 hidden md:flex items-center gap-2 text-sm">
+        <button class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700" data-action="nav" data-mode="recommended">Polecane</button>
+        <button class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700" data-action="nav" data-mode="top">Najwyżej oceniane</button>
+        <button class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700" data-action="nav" data-mode="recent">Najnowsze</button>
+      </nav>
+      <div class="ml-auto flex items-center gap-2">
+        <button id="btnOpenAdd" class="hidden px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500">Dodaj film</button>
+        <div id="authBox" class="flex items-center gap-2"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= FILTERS ================= -->
+  <section class="max-w-7xl mx-auto px-4 py-5">
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+      <select id="fCategory" class="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2"></select>
+      <input id="fYear" type="number" placeholder="Rok" class="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2" />
+      <input id="fMinDuration" type="number" placeholder="Min. długość (min)" class="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2" />
+      <select id="fSort" class="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2">
+        <option value="avg_rating">Ocena</option>
+        <option value="year">Rok</option>
+        <option value="duration">Czas</option>
+        <option value="created_at">Najnowsze</option>
+      </select>
+      <input id="fSearch" placeholder="Szukaj tytułu…" class="col-span-2 md:col-span-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2" />
+      <button id="btnSearch" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700">Szukaj</button>
+    </div>
+  </section>
+
+  <!-- ================= MOVIES GRID ================= -->
+  <main class="max-w-7xl mx-auto px-4 pb-28">
+    <div id="movies" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4"></div>
+    <div id="emptyState" class="hidden text-zinc-400 text-center py-20">Brak wyników.</div>
+  </main>
+
+  <!-- ================= ADD / EDIT MODAL ================= -->
+  <div id="movieModal" class="hidden fixed inset-0 modal-bg grid place-items-center p-4">
+    <div class="w-full max-w-2xl bg-zinc-900 rounded-2xl border border-zinc-800 shadow-xl">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+        <h3 id="movieModalTitle" class="text-lg font-semibold">Nowy film</h3>
+        <button class="p-2 rounded-lg hover:bg-zinc-800" data-close-modal>
+          <i class="lucide-x"></i>
+        </button>
+      </div>
+      <form id="movieForm" class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input name="id" type="hidden" />
+        <label class="grid gap-1">
+          <span>Tytuł</span>
+          <input required name="title" class="bg-zinc-800 rounded-xl px-3 py-2 border border-zinc-700" />
+        </label>
+        <label class="grid gap-1">
+          <span>Kategoria</span>
+          <select required name="category_id" id="mfCategory" class="bg-zinc-800 rounded-xl px-3 py-2 border border-zinc-700"></select>
+        </label>
+        <label class="md:col-span-2 grid gap-1">
+          <span>Opis</span>
+          <textarea name="description" rows="3" class="bg-zinc-800 rounded-xl px-3 py-2 border border-zinc-700"></textarea>
+        </label>
+        <label class="grid gap-1">
+          <span>Rok</span>
+          <input required type="number" name="year" class="bg-zinc-800 rounded-xl px-3 py-2 border border-zinc-700" />
+        </label>
+        <label class="grid gap-1">
+          <span>Długość (min)</span>
+          <input required type="number" name="duration" class="bg-zinc-800 rounded-xl px-3 py-2 border border-zinc-700" />
+        </label>
+        <label class="md:col-span-2 grid gap-1">
+          <span>Miniaturka (URL)</span>
+          <input required name="thumbnail_url" class="bg-zinc-800 rounded-xl px-3 py-2 border border-zinc-700" />
+        </label>
+        <label class="md:col-span-2 grid gap-1">
+          <span>Video (iframe src / odtwarzalny URL)</span>
+          <input required name="video_url" class="bg-zinc-800 rounded-xl px-3 py-2 border border-zinc-700" />
+        </label>
+        <div class="md:col-span-2 flex justify-end gap-3 pt-2">
+          <button type="button" data-close-modal class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700">Anuluj</button>
+          <button class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500" type="submit">Zapisz</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MOVIE DETAILS MODAL (ratings+comments) ================= -->
+  <div id="detailsModal" class="hidden fixed inset-0 modal-bg grid place-items-center p-4">
+    <div class="w-full max-w-4xl bg-zinc-900 rounded-2xl border border-zinc-800 shadow-xl overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+        <h3 id="detailsTitle" class="text-lg font-semibold">Szczegóły</h3>
+        <button class="p-2 rounded-lg hover:bg-zinc-800" data-close-details>
+          <i class="lucide-x"></i>
+        </button>
+      </div>
+      <div class="grid md:grid-cols-5 gap-0">
+        <div class="md:col-span-2 p-5 border-r border-zinc-800">
+          <img id="detailsThumb" class="w-full aspect-[3/4] object-cover rounded-xl border border-zinc-800" />
+          <p id="detailsMeta" class="mt-3 text-sm text-zinc-400"></p>
+          <div class="mt-4">
+            <div id="ratingBox" class="flex items-center gap-2"></div>
+            <div id="avgRating" class="text-sm text-zinc-400 mt-1"></div>
+          </div>
+        </div>
+        <div class="md:col-span-3 p-5 space-y-4">
+          <p id="detailsDesc" class="text-zinc-300"></p>
+          <div class="border-t border-zinc-800 pt-4">
+            <h4 class="font-semibold mb-2">Komentarze</h4>
+            <div id="commentsList" class="space-y-3 max-h-80 overflow-auto pr-2"></div>
+            <form id="commentForm" class="mt-3 flex gap-2">
+              <input id="commentInput" placeholder="Dodaj komentarz…" class="flex-1 bg-zinc-800 rounded-xl px-3 py-2 border border-zinc-700" />
+              <button class="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700">Wyślij</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="border-t border-zinc-900 py-10 text-center text-zinc-500">
+    © <span id="yearSpan"></span> • Mini Netflix (Supabase)
+  </footer>
+
+  <!-- ================= APP SCRIPT ================= -->
+  <script>
+    // ======= CONFIG =======
+    const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co"; // TODO: podmień
+    const SUPABASE_ANON_KEY = "YOUR-ANON-KEY"; // TODO: podmień (publiczny anon key)
+
+    /**
+     * Rekomendowana struktura DB (SQL uruchom w Supabase SQL Editor):
+     *
+     * -- categories
+     * create table if not exists public.categories (
+     *   id uuid primary key default gen_random_uuid(),
+     *   name text unique not null
+     * );
+     *
+     * -- movies
+     * create table if not exists public.movies (
+     *   id uuid primary key default gen_random_uuid(),
+     *   title text not null,
+     *   description text,
+     *   category_id uuid references public.categories(id) on delete set null,
+     *   year int,
+     *   duration int,
+     *   thumbnail_url text,
+     *   video_url text,
+     *   created_at timestamp with time zone default now()
+     * );
+     *
+     * -- profiles (powiązane z auth.users)
+     * create table if not exists public.profiles (
+     *   id uuid primary key references auth.users(id) on delete cascade,
+     *   username text,
+     *   is_admin boolean default false,
+     *   created_at timestamp with time zone default now()
+     * );
+     *
+     * -- ratings
+     * create table if not exists public.ratings (
+     *   id bigserial primary key,
+     *   movie_id uuid references public.movies(id) on delete cascade,
+     *   user_id uuid references public.profiles(id) on delete cascade,
+     *   rating int check (rating between 1 and 5),
+     *   created_at timestamp with time zone default now(),
+     *   unique (movie_id, user_id)
+     * );
+     *
+     * -- comments
+     * create table if not exists public.comments (
+     *   id bigserial primary key,
+     *   movie_id uuid references public.movies(id) on delete cascade,
+     *   user_id uuid references public.profiles(id) on delete cascade,
+     *   content text not null,
+     *   created_at timestamp with time zone default now()
+     * );
+     *
+     * -- Widok z uśrednioną oceną
+     * create view public.movie_with_avg as
+     *   select m.*, coalesce(round(avg(r.rating)::numeric, 2), 0) as avg_rating
+     *   from public.movies m
+     *   left join public.ratings r on r.movie_id = m.id
+     *   group by m.id;
+     *
+     * -- POLITYKI RLS (włącz RLS i wklej poniżej)
+     * alter table public.movies enable row level security;
+     * alter table public.categories enable row level security;
+     * alter table public.ratings enable row level security;
+     * alter table public.comments enable row level security;
+     * alter table public.profiles enable row level security;
+     *
+     * -- profiles
+     * create policy "read profiles" on public.profiles for select using (true);
+     * create policy "insert own profile" on public.profiles for insert with check (auth.uid() = id);
+     * create policy "update own profile" on public.profiles for update using (auth.uid() = id);
+     *
+     * -- categories (public read, only admin write)
+     * create policy "read categories" on public.categories for select using (true);
+     * create policy "write categories admin" on public.categories for all using (
+     *   exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin)
+     * ) with check (
+     *   exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin)
+     * );
+     *
+     * -- movies (public read, only admin write)
+     * create policy "read movies" on public.movies for select using (true);
+     * create policy "write movies admin" on public.movies for all using (
+     *   exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin)
+     * ) with check (
+     *   exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin)
+     * );
+     *
+     * -- ratings (auth users CRUD only own)
+     * create policy "read ratings" on public.ratings for select using (true);
+     * create policy "insert ratings" on public.ratings for insert with check (auth.uid() = user_id);
+     * create policy "update own rating" on public.ratings for update using (auth.uid() = user_id);
+     * create policy "delete own rating" on public.ratings for delete using (auth.uid() = user_id);
+     *
+     * -- comments (public read, user writes own)
+     * create policy "read comments" on public.comments for select using (true);
+     * create policy "insert comments" on public.comments for insert with check (auth.uid() = user_id);
+     * create policy "update own comment" on public.comments for update using (auth.uid() = user_id);
+     * create policy "delete own comment" on public.comments for delete using (auth.uid() = user_id);
+     */
+
+    // ======= INIT =======
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const state = {
+      user: null,
+      mode: 'recommended',
+      filters: { category_id: null, year: null, minDuration: null, sort: 'avg_rating', search: '' },
+      categories: [],
+      selectedMovie: null,
+    };
+
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+    document.getElementById('yearSpan').textContent = new Date().getFullYear();
+
+    // ======= AUTH UI =======
+    async function refreshAuthUI(){
+      const { data: { user } } = await client.auth.getUser();
+      state.user = user;
+      const box = document.getElementById('authBox');
+      const btnAdd = document.getElementById('btnOpenAdd');
+      box.innerHTML = '';
+      if(user){
+        const { data: prof } = await client.from('profiles').select('username, is_admin').eq('id', user.id).maybeSingle();
+        const name = prof?.username || user.email;
+        const isAdmin = !!prof?.is_admin;
+        btnAdd.classList.toggle('hidden', !isAdmin);
+        box.innerHTML = `
+          <span class="text-sm text-zinc-300">${name}${isAdmin ? ' • admin' : ''}</span>
+          <button id="btnSignOut" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700">Wyloguj</button>
+        `;
+        $('#btnSignOut').onclick = () => client.auth.signOut().then(refreshAuthUI);
+      } else {
+        btnAdd.classList.add('hidden');
+        box.innerHTML = `
+          <input id="authEmail" type="email" placeholder="email" class="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5" />
+          <input id="authPass" type="password" placeholder="hasło" class="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5" />
+          <button id="btnSignIn" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500">Zaloguj</button>
+          <button id="btnSignUp" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700">Rejestracja</button>
+        `;
+        $('#btnSignIn').onclick = async () => {
+          const email = $('#authEmail').value.trim();
+          const password = $('#authPass').value.trim();
+          const { error } = await client.auth.signInWithPassword({ email, password });
+          if(error) alert(error.message); else refreshAuthUI();
+        };
+        $('#btnSignUp').onclick = async () => {
+          const email = $('#authEmail').value.trim();
+          const password = $('#authPass').value.trim();
+          const { data, error } = await client.auth.signUp({ email, password });
+          if(error) alert(error.message);
+          else {
+            // ensure profile row exists (via upsert from client)
+            await client.from('profiles').upsert({ id: data.user.id, username: email.split('@')[0] });
+            alert('Sprawdź mail (potwierdzenie).');
+          }
+        };
+      }
+    }
+
+    client.auth.onAuthStateChange((_evt, _sess)=> { refreshAuthUI(); });
+
+    // ======= NAV =======
+    $$('[data-action="nav"]').forEach(btn => btn.addEventListener('click', () => {
+      state.mode = btn.dataset.mode;
+      loadMovies();
+    }));
+
+    $('#btnSearch').addEventListener('click', () => applyFilters());
+    $('#fSearch').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); applyFilters(); }});
+
+    function applyFilters(){
+      state.filters = {
+        category_id: $('#fCategory').value || null,
+        year: $('#fYear').value || null,
+        minDuration: $('#fMinDuration').value || null,
+        sort: $('#fSort').value || 'avg_rating',
+        search: $('#fSearch').value || ''
+      };
+      loadMovies();
+    }
+
+    // ======= CATEGORIES =======
+    async function loadCategories(){
+      const { data } = await client.from('categories').select('*').order('name');
+      state.categories = data || [];
+      const opts = ["<option value=''>Wszystkie kategorie</option>"]
+        .concat(state.categories.map(c=>`<option value="${c.id}">${c.name}</option>`));
+      $('#fCategory').innerHTML = opts.join('');
+      $('#mfCategory').innerHTML = state.categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    }
+
+    // ======= MOVIES =======
+    async function loadMovies(){
+      // pobieramy z widoku movie_with_avg (ma kolumnę avg_rating)
+      let query = client.from('movie_with_avg').select('*');
+
+      const { category_id, year, minDuration, search } = state.filters;
+      if(category_id) query = query.eq('category_id', category_id);
+      if(year) query = query.eq('year', Number(year));
+      if(minDuration) query = query.gte('duration', Number(minDuration));
+      if(search) query = query.ilike('title', `%${search}%`);
+
+      // tryb nawigacji
+      if(state.mode === 'top') {
+        query = query.order('avg_rating', { ascending: false }).order('created_at', { ascending: false });
+      } else if(state.mode === 'recent') {
+        query = query.order('created_at', { ascending: false });
+      } else { // recommended = top
+        query = query.order('avg_rating', { ascending: false });
+      }
+
+      // sort z filtrów nadpisuje
+      const sort = state.filters.sort || 'avg_rating';
+      query = query.order(sort, { ascending: false });
+
+      const { data, error } = await query;
+      if(error){ console.error(error); alert(error.message); return; }
+      renderMovies(data || []);
+    }
+
+    function renderMovies(movies){
+      const grid = $('#movies');
+      grid.innerHTML = '';
+      $('#emptyState').classList.toggle('hidden', movies.length > 0);
+      for(const m of movies){
+        const card = document.createElement('article');
+        card.className = 'group relative bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden hover:border-zinc-700 transition';
+        card.innerHTML = `
+          <div class="relative">
+            <img src="${m.thumbnail_url}" alt="${m.title}" class="w-full aspect-[2/3] object-cover" />
+            <div class="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-sm flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded-lg bg-black/50">${m.year ?? ''}</span>
+              <span class="px-2 py-0.5 rounded-lg bg-black/50">⏱️ ${m.duration ?? 0} min</span>
+            </div>
+          </div>
+          <div class="p-3">
+            <h3 class="font-semibold line-clamp-2">${m.title}</h3>
+            <p class="text-xs text-zinc-400 mt-1">⭐ ${Number(m.avg_rating || 0).toFixed(1)}</p>
+            <div class="mt-3 flex items-center gap-2">
+              <button class="px-2 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs" data-open-details data-id="${m.id}">Szczegóły</button>
+              <a target="_blank" href="${m.video_url}" class="px-2 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-xs">Oglądaj</a>
+              <button class="ml-auto hidden px-2 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs" data-edit data-id="${m.id}">Edytuj</button>
+              <button class="hidden px-2 py-1 rounded-lg bg-red-700 hover:bg-red-600 text-xs" data-delete data-id="${m.id}">Usuń</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      }
+      bindCardActions();
+      showAdminButtonsIfNeeded();
+    }
+
+    async function showAdminButtonsIfNeeded(){
+      const user = state.user;
+      if(!user) return;
+      const { data: prof } = await client.from('profiles').select('is_admin').eq('id', user.id).maybeSingle();
+      const isAdmin = !!prof?.is_admin;
+      $$('[data-edit], [data-delete]').forEach(btn => btn.classList.toggle('hidden', !isAdmin));
+    }
+
+    function bindCardActions(){
+      $$('[data-open-details]').forEach(btn => btn.onclick = () => openDetails(btn.dataset.id));
+      $$('[data-edit]').forEach(btn => btn.onclick = () => openMovieModal(btn.dataset.id));
+      $$('[data-delete]').forEach(btn => btn.onclick = () => deleteMovie(btn.dataset.id));
+    }
+
+    // ======= MOVIE MODAL =======
+    document.querySelectorAll('[data-close-modal]').forEach(b=> b.addEventListener('click', closeMovieModal));
+    $('#btnOpenAdd').addEventListener('click', () => openMovieModal());
+
+    function openMovieModal(id){
+      $('#movieModal').classList.remove('hidden');
+      $('#movieModalTitle').textContent = id ? 'Edytuj film' : 'Nowy film';
+      $('#movieForm').reset();
+      $('#movieForm [name="id"]').value = id || '';
+      // categories select already filled
+      if(id) loadMovieToForm(id);
+    }
+    function closeMovieModal(){ $('#movieModal').classList.add('hidden'); }
+
+    async function loadMovieToForm(id){
+      const { data, error } = await client.from('movies').select('*').eq('id', id).maybeSingle();
+      if(error){ alert(error.message); return; }
+      if(!data) return;
+      for(const [k,v] of Object.entries(data)){
+        const input = document.querySelector(`#movieForm [name="${k}"]`);
+        if(input) input.value = v ?? '';
+      }
+    }
+
+    $('#movieForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const fd = new FormData(e.currentTarget);
+      const payload = Object.fromEntries(fd.entries());
+      const id = payload.id || null; delete payload.id;
+      payload.year = payload.year? Number(payload.year): null;
+      payload.duration = payload.duration? Number(payload.duration): null;
+
+      const table = client.from('movies');
+      const { data, error } = id
+        ? await table.update(payload).eq('id', id).select('*').single()
+        : await table.insert(payload).select('*').single();
+
+      if(error){ alert(error.message); return; }
+      closeMovieModal();
+      await loadMovies();
+    });
+
+    async function deleteMovie(id){
+      if(!confirm('Usunąć ten film?')) return;
+      const { error } = await client.from('movies').delete().eq('id', id);
+      if(error){ alert(error.message); return; }
+      await loadMovies();
+    }
+
+    // ======= DETAILS (ratings + comments) =======
+    document.querySelector('[data-close-details]').addEventListener('click', ()=> $('#detailsModal').classList.add('hidden'));
+
+    async function openDetails(id){
+      state.selectedMovie = id;
+      const { data: m } = await client.from('movie_with_avg').select('*').eq('id', id).maybeSingle();
+      if(!m) return;
+      $('#detailsTitle').textContent = m.title;
+      $('#detailsThumb').src = m.thumbnail_url;
+      $('#detailsMeta').textContent = `${m.year || ''} • ${m.duration || 0} min`;
+      $('#detailsDesc').textContent = m.description || '';
+      $('#avgRating').textContent = `Średnia: ⭐ ${Number(m.avg_rating||0).toFixed(1)}`;
+
+      // my rating UI
+      renderRatingStars(id);
+      // comments
+      await loadComments(id);
+
+      $('#detailsModal').classList.remove('hidden');
+    }
+
+    async function renderRatingStars(movieId){
+      const box = $('#ratingBox');
+      box.innerHTML = '';
+      const user = state.user;
+      const { data: my } = user
+        ? await client.from('ratings').select('rating').eq('movie_id', movieId).eq('user_id', user.id).maybeSingle()
+        : { data: null };
+
+      const current = my?.rating || 0;
+      const label = document.createElement('span');
+      label.className = 'text-sm text-zinc-300';
+      label.textContent = 'Twoja ocena:';
+      box.appendChild(label);
+
+      for(let i=1; i<=5; i++){
+        const btn = document.createElement('button');
+        btn.className = 'p-1 text-2xl';
+        btn.textContent = i <= current ? '★' : '☆';
+        btn.title = `${i}/5`;
+        btn.disabled = !user;
+        btn.onclick = async ()=>{
+          if(!state.user){ alert('Zaloguj się, aby ocenić.'); return; }
+          const { error } = await client.from('ratings').upsert({ movie_id: movieId, user_id: state.user.id, rating: i });
+          if(error) alert(error.message);
+          else openDetails(movieId); // odśwież
+        };
+        box.appendChild(btn);
+      }
+      if(!user){
+        const hint = document.createElement('span');
+        hint.className = 'text-xs text-zinc-500 ml-2';
+        hint.textContent = ' (wymaga zalogowania)';
+        box.appendChild(hint);
+      }
+    }
+
+    async function loadComments(movieId){
+      const { data } = await client
+        .from('comments')
+        .select('id, content, created_at, user_id, profiles(username)')
+        .eq('movie_id', movieId)
+        .order('created_at', { ascending: false });
+      const list = $('#commentsList');
+      list.innerHTML = '';
+      (data || []).forEach(row => {
+        const item = document.createElement('div');
+        item.className = 'flex gap-3 items-start';
+        item.innerHTML = `
+          <div class="w-9 h-9 rounded-full bg-zinc-800 grid place-items-center text-zinc-400 text-sm">👤</div>
+          <div class="flex-1">
+            <div class="text-sm"><span class="font-medium">${row.profiles?.username || 'użytkownik'}</span> <span class="text-zinc-500">• ${new Date(row.created_at).toLocaleString()}</span></div>
+            <div class="text-zinc-200">${escapeHtml(row.content)}</div>
+            <div class="mt-1 flex gap-2 text-xs">
+              ${state.user && state.user.id === row.user_id ? `<button data-del-comment="${row.id}" class="text-red-400 hover:underline">Usuń</button>` : ''}
+            </div>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+      // delete handlers
+      $$('[data-del-comment]').forEach(btn => btn.onclick = async ()=>{
+        const id = btn.getAttribute('data-del-comment');
+        const { error } = await client.from('comments').delete().eq('id', id);
+        if(error) alert(error.message); else loadComments(movieId);
+      });
+    }
+
+    $('#commentForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      if(!state.user){ alert('Zaloguj się, aby komentować.'); return; }
+      const content = $('#commentInput').value.trim();
+      if(!content) return;
+      const { error } = await client.from('comments').insert({ movie_id: state.selectedMovie, user_id: state.user.id, content });
+      if(error) alert(error.message);
+      $('#commentInput').value = '';
+      await loadComments(state.selectedMovie);
+    });
+
+    // ======= HELPERS =======
+    function escapeHtml(s=''){
+      return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+
+    // ======= BOOT =======
+    (async function boot(){
+      await refreshAuthUI();
+      await loadCategories();
+      await loadMovies();
+    })();
+  </script>
+</body>
+</html>
