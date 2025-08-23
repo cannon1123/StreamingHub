@@ -2,127 +2,191 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>StreamingHub – Filmy</title>
+  <title>StreamingHub</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #111;
-      color: #eee;
+      background: #0e0e10;
+      color: #fff;
     }
     header {
-      background: #222;
-      padding: 10px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 15px 30px;
+      background: #141414;
+      border-bottom: 1px solid #222;
     }
     header h1 {
       margin: 0;
-      color: #0f9d58;
+      font-size: 20px;
+      font-weight: bold;
+      color: #7e57c2;
     }
-    header nav a {
-      color: #eee;
-      margin-left: 15px;
-      text-decoration: none;
-    }
-    header nav a:hover {
-      color: #0f9d58;
-    }
-    .container {
-      padding: 20px;
-    }
-    .movies-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    .nav {
+      display: flex;
       gap: 20px;
     }
-    .movie-card {
+    .nav span {
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .nav span:hover {
+      color: #7e57c2;
+    }
+    .container {
+      padding: 20px 40px;
+    }
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .filters input, .filters select {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #333;
       background: #1c1c1c;
-      border-radius: 10px;
+      color: #fff;
+    }
+    .section {
+      margin-bottom: 40px;
+    }
+    .section h2 {
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+    .movies-row {
+      display: flex;
+      gap: 15px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+    }
+    .movie-card {
+      min-width: 180px;
+      background: #1c1c1c;
+      border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
       transition: transform 0.2s;
+      flex-shrink: 0;
     }
     .movie-card:hover {
       transform: scale(1.05);
     }
     .movie-card img {
       width: 100%;
-      height: 300px;
+      height: 250px;
       object-fit: cover;
     }
     .movie-info {
       padding: 10px;
     }
     .movie-info h3 {
-      margin: 0 0 5px 0;
-      font-size: 18px;
-      color: #0f9d58;
-    }
-    .movie-info p {
-      margin: 0;
       font-size: 14px;
+      margin: 0 0 5px;
+      color: #fff;
+    }
+    .movie-meta {
+      font-size: 12px;
       color: #aaa;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      font-size: 12px;
+      background: #7e57c2;
+      border-radius: 6px;
+      margin-left: 5px;
+    }
+    /* Ukrywanie sekcji */
+    .page {
+      display: none;
+    }
+    .page.active {
+      display: block;
     }
   </style>
 </head>
 <body>
   <header>
     <h1>🎬 StreamingHub</h1>
-    <nav>
-      <a href="index.html">Strona główna</a>
-      <a href="filmy.html">Filmy</a>
-      <a href="#" onclick="logout()">Wyloguj</a>
-    </nav>
+    <div class="nav">
+      <span onclick="showPage('filmy')">Filmy</span>
+      <span onclick="showPage('top')">TOP 10</span>
+      <span onclick="showPage('biblioteka')">Moja biblioteka</span>
+      <span onclick="showPage('admin')">Admin</span>
+      <span onclick="logout()">Wyloguj</span>
+    </div>
   </header>
 
   <div class="container">
-    <h2>📺 Katalog filmów</h2>
-    <div id="movies" class="movies-grid"></div>
+
+    <!-- STRONA FILMY -->
+    <div id="filmy" class="page active">
+      <div class="filters">
+        <select id="category">
+          <option value="">Kategoria</option>
+        </select>
+        <select id="year">
+          <option value="">Rok</option>
+        </select>
+        <select id="sort">
+          <option value="rating">Sortuj: Ocena</option>
+          <option value="year">Sortuj: Rok</option>
+        </select>
+        <input type="text" id="search" placeholder="Szukaj tytułu...">
+      </div>
+
+      <div class="section">
+        <h2>Polecane</h2>
+        <div id="recommended" class="movies-row"></div>
+      </div>
+
+      <div class="section">
+        <h2>Nowo dodane</h2>
+        <div id="new" class="movies-row"></div>
+      </div>
+
+      <div class="section">
+        <h2>Najwyżej oceniane</h2>
+        <div id="toprated" class="movies-row"></div>
+      </div>
+    </div>
+
+    <!-- STRONA TOP 10 -->
+    <div id="top" class="page">
+      <h2>🏆 TOP 10</h2>
+      <div id="top10" class="movies-row"></div>
+    </div>
+
+    <!-- STRONA BIBLIOTEKA -->
+    <div id="biblioteka" class="page">
+      <h2>📚 Moja biblioteka</h2>
+      <div id="library" class="movies-row"></div>
+    </div>
+
+    <!-- STRONA ADMIN -->
+    <div id="admin" class="page">
+      <h2>⚙️ Panel administratora</h2>
+      <p>Tu dodasz nowe filmy do bazy.</p>
+    </div>
   </div>
 
   <script>
     // 🔑 KONFIGURACJA SUPABASE
-    const SUPABASE_URL = "https://jjmnacolebxsifmnmqks.supabase.co"; // <- wstaw swój
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqbW5hY29sZWJ4c2lmbW5tcWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3OTcyNDQsImV4cCI6MjA3MTM3MzI0NH0.1hNoBQ4wDuA_t_vscorQ6FRb-aW8IxHEDxuZKEhndv0"; // <- wstaw swój
+    const SUPABASE_URL = "https://jjmnacolebxsifmnmqks.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqbW5hY29sZWJ4c2lmbW5tcWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3OTcyNDQsImV4cCI6MjA3MTM3MzI0NH0.1hNoBQ4wDuA_t_vscorQ6FRb-aW8IxHEDxuZKEhndv0";
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
     });
 
-    // ✅ Sprawdzanie logowania
-    async function checkLogin() {
-      const { data: { user } } = await db.auth.getUser();
-      if (!user) {
-        alert("Musisz być zalogowany, aby oglądać filmy!");
-        window.location.href = "index.html";
-      }
-    }
-
-    // 🎬 Pobieranie filmów z Supabase
-    async function loadMovies() {
-      const { data, error } = await db.from("movies").select("*");
-      if (error) {
-        console.error("Błąd pobierania filmów:", error);
-        return;
-      }
-
-      const container = document.getElementById("movies");
-      container.innerHTML = "";
-
-      data.forEach(movie => {
-        const card = document.createElement("div");
-        card.className = "movie-card";
-        card.innerHTML = `
-          <img src="${movie.image_url || 'https://via.placeholder.com/220x300?text=Brak+obrazka'}" alt="${movie.title}">
-          <div class="movie-info">
-            <h3>${movie.title}</h3>
-            <p>${movie.description || "Brak opisu"}</p>
-          </div>
-        `;
-        container.appendChild(card);
-      });
+    // ✅ Przełączanie podstron
+    function showPage(id) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
     }
 
     // 🚪 Wylogowanie
@@ -131,8 +195,40 @@
       window.location.href = "index.html";
     }
 
-    // 🔄 Start
-    checkLogin().then(loadMovies);
+    // 🎬 Renderowanie filmów
+    function renderMovies(containerId, movies) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = "";
+      movies.forEach(movie => {
+        const card = document.createElement("div");
+        card.className = "movie-card";
+        card.innerHTML = `
+          <img src="${movie.image_url || 'https://via.placeholder.com/180x250'}" alt="${movie.title}">
+          <div class="movie-info">
+            <h3>${movie.title} <span class="badge">${movie.rating || "?"}</span></h3>
+            <div class="movie-meta">czas: ${movie.duration || "?"} min • rok ${movie.year || "?"}</div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // 📥 Pobieranie filmów z Supabase
+    async function loadMovies() {
+      const { data, error } = await db.from("movies").select("*");
+      if (error) {
+        console.error("Błąd filmów:", error);
+        return;
+      }
+
+      // przykład podziału
+      renderMovies("recommended", data.slice(0,5));
+      renderMovies("new", data.slice(-5));
+      renderMovies("toprated", data.sort((a,b) => b.rating - a.rating).slice(0,5));
+      renderMovies("top10", data.sort((a,b) => b.rating - a.rating).slice(0,10));
+    }
+
+    loadMovies();
   </script>
 </body>
 </html>
