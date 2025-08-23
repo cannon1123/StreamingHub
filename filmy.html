@@ -41,7 +41,7 @@
     }
     .filters {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 10px;
       margin-bottom: 20px;
     }
@@ -72,6 +72,7 @@
       overflow: hidden;
       transition: transform 0.2s;
       flex-shrink: 0;
+      cursor: pointer;
     }
     .movie-card:hover {
       transform: scale(1.05);
@@ -101,13 +102,8 @@
       border-radius: 6px;
       margin-left: 5px;
     }
-    /* Ukrywanie sekcji */
-    .page {
-      display: none;
-    }
-    .page.active {
-      display: block;
-    }
+    .page { display: none; }
+    .page.active { display: block; }
   </style>
 </head>
 <body>
@@ -126,17 +122,19 @@
     <!-- STRONA FILMY -->
     <div id="filmy" class="page active">
       <div class="filters">
-        <select id="category">
+        <select id="filterCategory" onchange="loadMovies()">
           <option value="">Kategoria</option>
         </select>
-        <select id="year">
+        <select id="filterYear" onchange="loadMovies()">
           <option value="">Rok</option>
         </select>
-        <select id="sort">
+        <select id="filterSort" onchange="loadMovies()">
+          <option value="created_at">Sortuj: Najnowsze</option>
           <option value="rating">Sortuj: Ocena</option>
           <option value="year">Sortuj: Rok</option>
+          <option value="title">Sortuj: Tytuł</option>
         </select>
-        <input type="text" id="search" placeholder="Szukaj tytułu...">
+        <input type="text" id="filterSearch" placeholder="Szukaj tytułu..." onkeyup="loadMovies()">
       </div>
 
       <div class="section">
@@ -167,17 +165,12 @@
       <div id="library" class="movies-row"></div>
     </div>
 
-    <!-- STRONA ADMIN -->
-    <div id="admin" class="page">
-      <h2>⚙️ Panel administratora</h2>
-      <p>Tu dodasz nowe filmy do bazy.</p>
-    </div>
   </div>
 
   <script>
     // 🔑 KONFIGURACJA SUPABASE
     const SUPABASE_URL = "https://jjmnacolebxsifmnmqks.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqbW5hY29sZWJ4c2lmbW5tcWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3OTcyNDQsImV4cCI6MjA3MTM3MzI0NH0.1hNoBQ4wDuA_t_vscorQ6FRb-aW8IxHEDxuZKEhndv0";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqbW5hY29sZWJ4c2lmbW5tcWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3OTcyNDQsImV4cCI6MjA3MTM3MzI0NH0.1hNoBQ4wDuA_t_vscorQ6FRb-aW8IxHEDxuZKEhndv0"; // 🔒 nie dawaj service key!
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
     });
@@ -201,6 +194,7 @@
       movies.forEach(movie => {
         const card = document.createElement("div");
         card.className = "movie-card";
+        card.onclick = () => window.location.href = "watch.html?id=" + movie.id;
         card.innerHTML = `
           <img src="${movie.image_url || 'https://via.placeholder.com/180x250'}" alt="${movie.title}">
           <div class="movie-info">
@@ -214,20 +208,35 @@
 
     // 📥 Pobieranie filmów z Supabase
     async function loadMovies() {
-      const { data, error } = await db.from("movies").select("*");
+      const category = document.getElementById("filterCategory")?.value || "";
+      const year = document.getElementById("filterYear")?.value || "";
+      const sort = document.getElementById("filterSort")?.value || "created_at";
+      const search = document.getElementById("filterSearch")?.value || "";
+
+      let query = db.from("movies").select("*");
+
+      if (category) query = query.eq("category_id", category);
+      if (year) query = query.eq("year", year);
+      if (search) query = query.ilike("title", `%${search}%`);
+
+      if (sort === "rating") query = query.order("rating", { ascending: false });
+      else if (sort === "title") query = query.order("title", { ascending: true });
+      else if (sort === "year") query = query.order("year", { ascending: false });
+      else query = query.order("created_at", { ascending: false });
+
+      const { data, error } = await query;
       if (error) {
-        console.error("Błąd filmów:", error);
+        console.error("❌ Błąd:", error);
         return;
       }
 
-      // przykład podziału
       renderMovies("recommended", data.slice(0,5));
       renderMovies("new", data.slice(-5));
       renderMovies("toprated", data.sort((a,b) => b.rating - a.rating).slice(0,5));
       renderMovies("top10", data.sort((a,b) => b.rating - a.rating).slice(0,10));
     }
 
-    loadMovies();
+    document.addEventListener("DOMContentLoaded", loadMovies);
   </script>
 </body>
 </html>
