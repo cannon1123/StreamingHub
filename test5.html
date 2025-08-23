@@ -413,10 +413,25 @@ async function loadMovies() {
   console.log("📀 Filmy z bazy:", movies);
 
   // 📊 Pobierz średnie oceny
-  const { data: ratings, error: ratingError } = await db
-    .from("ratings")
-    .select("movie_id, avg(score)")
-    .group("movie_id");
+const { data: ratings, error: ratingError } = await db
+  .from("ratings")
+  .select("movie_id, score");
+
+if (ratingError) {
+  console.error("Błąd ocen:", ratingError);
+}
+
+let ratingMap = {};
+ratings.forEach(r => {
+  if (!ratingMap[r.movie_id]) ratingMap[r.movie_id] = [];
+  ratingMap[r.movie_id].push(r.score);
+});
+
+let avgRatings = Object.entries(ratingMap).map(([movie_id, scores]) => ({
+  movie_id,
+  avg: scores.reduce((a, b) => a + b, 0) / scores.length
+}));
+
 
   if (ratingError) {
     console.error("Błąd ocen:", ratingError);
