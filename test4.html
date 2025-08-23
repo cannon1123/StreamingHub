@@ -372,6 +372,7 @@ function renderMovies(containerId, movies) {
 }
 
 // 🎬 Pobieranie filmów z Supabase
+// 📥 Pobieranie filmów z Supabase
 async function loadMovies() {
   const { data: movies, error } = await db
     .from("movies")
@@ -383,27 +384,31 @@ async function loadMovies() {
     return;
   }
 
-const { data: ratings, error: ratingsError } = await db
-  .from("ratings")
-  .select("movie_id, avg:score");
+  // 📊 Pobierz średnie oceny
+  const { data: ratings, error: ratingError } = await db
+    .from("ratings")
+    .select("movie_id, avg(score)")
+    .group("movie_id");
 
-if (ratingsError) {
-  console.error("Błąd ocen:", ratingsError);
-}
+  if (ratingError) {
+    console.error("Błąd ocen:", ratingError);
+  }
 
-
+  // 🔗 Dodaj średnie oceny do filmów
   let moviesWithRatings = movies.map(m => {
     const r = ratings ? ratings.find(r => r.movie_id === m.id) : null;
     return { ...m, avg_rating: r ? r.avg : 0 };
   });
 
-  renderMovies("recommended", [...movies].sort((a,b)=>b.points_required - a.points_required).slice(0,5));
-  renderMovies("new", movies.slice(0,5));
-  renderMovies("toprated", moviesWithRatings.sort((a,b)=>b.avg_rating - a.avg_rating).slice(0,5));
-}
+  // 🟣 Polecane – sortuj po points_required
+  renderMovies("list-recommended", [...movies].sort((a,b)=>b.points_required - a.points_required).slice(0,5));
 
-// 🚀 Wywołaj przy starcie
-loadMovies();
+  // 🟢 Nowo dodane – sortuj po created_at
+  renderMovies("list-new", movies.slice(0,5));
+
+  // 🔥 Najwyżej oceniane – sortuj po średniej ocenie
+  renderMovies("list-top", moviesWithRatings.sort((a,b)=>b.avg_rating - a.avg_rating).slice(0,5));
+}
 
 </script>
 </body>
