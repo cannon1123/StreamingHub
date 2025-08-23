@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>StreamingHub - Filmy</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {margin:0;font-family:Arial, sans-serif;background:#0e0e10;color:#fff;}
+    header {display:flex;justify-content:space-between;align-items:center;padding:15px 30px;background:#141414;border-bottom:1px solid #222;}
+    header h1 {margin:0;font-size:20px;font-weight:bold;color:#7e57c2;}
+    .nav {display:flex;gap:20px;}
+    .nav span {cursor:pointer;font-weight:500;}
+    .nav span:hover {color:#7e57c2;}
+    .container {padding:20px 40px;}
+    .filters {display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+    .filters input,.filters select {padding:8px;border-radius:6px;border:1px solid #333;background:#1c1c1c;color:#fff;}
+    .section {margin-bottom:40px;}
+    .section h2 {font-size:20px;margin-bottom:15px;}
+    .movies-row {display:flex;gap:15px;overflow-x:auto;padding-bottom:10px;}
+    .movie-card {min-width:180px;background:#1c1c1c;border-radius:8px;overflow:hidden;transition:transform 0.2s;flex-shrink:0;cursor:pointer;}
+    .movie-card:hover {transform:scale(1.05);}
+    .movie-card img {width:100%;height:250px;object-fit:cover;}
+    .movie-info {padding:10px;}
+    .movie-info h3 {font-size:14px;margin:0 0 5px;color:#fff;}
+    .movie-meta {font-size:12px;color:#aaa;}
+    .badge {display:inline-block;padding:2px 6px;font-size:12px;background:#7e57c2;border-radius:6px;margin-left:5px;}
+    .hidden {display:none;}
+    /* Modal */
+    .modal {position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;}
+    .modal-content {background:#1c1c1c;padding:20px;border-radius:10px;max-width:600px;width:100%;}
+    .modal-content iframe {width:100%;height:320px;border:0;}
+    .close {float:right;cursor:pointer;color:#aaa;}
+    .close:hover {color:#fff;}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎬 StreamingHub</h1>
+    <div class="nav">
+      <span onclick="showPage('filmy')">Filmy</span>
+      <span onclick="showPage('top')">TOP 10</span>
+      <span onclick="showPage('biblioteka')">Moja biblioteka</span>
+      <span onclick="toggleAdmin()">Dodaj film</span>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="filters">
+      <select id="category"><option value="">Kategoria</option></select>
+      <input type="number" id="year" placeholder="Rok">
+      <input type="number" id="minDuration" placeholder="Minuty">
+      <select id="sort">
+        <option value="rating">Sortuj: Ocena</option>
+        <option value="new">Sortuj: Nowe</option>
+        <option value="year">Sortuj: Rok</option>
+      </select>
+    </div>
+
+    <!-- FILMY -->
+    <div id="filmy" class="page">
+      <div class="section">
+        <h2>Polecane</h2>
+        <div id="recommended" class="movies-row"></div>
+      </div>
+      <div class="section">
+        <h2>Nowo dodane</h2>
+        <div id="new" class="movies-row"></div>
+      </div>
+      <div class="section">
+        <h2>Najwyżej oceniane</h2>
+        <div id="toprated" class="movies-row"></div>
+      </div>
+    </div>
+
+    <!-- TOP 10 -->
+    <div id="top" class="page hidden">
+      <h2>🏆 TOP 10</h2>
+      <div id="top10" class="movies-row"></div>
+    </div>
+
+    <!-- BIBLIOTEKA -->
+    <div id="biblioteka" class="page hidden">
+      <h2>📚 Moja biblioteka</h2>
+      <p>Tu będzie obsługa punktów i zakupów filmów.</p>
+    </div>
+  </div>
+
+  <!-- MODAL SZCZEGÓŁY FILMU -->
+  <div id="movieModal" class="modal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <div id="movieDetail"></div>
+    </div>
+  </div>
+
+  <!-- MODAL DODAWANIA FILMU -->
+  <div id="adminModal" class="modal" onclick="toggleAdmin()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <span class="close" onclick="toggleAdmin()">&times;</span>
+      <h2>Dodaj film</h2>
+      <form id="addForm" onsubmit="addMovie(event)">
+        <input id="title" placeholder="Tytuł" required><br><br>
+        <textarea id="desc" placeholder="Opis"></textarea><br><br>
+        <input id="iframe" placeholder="Iframe URL" required><br><br>
+        <input id="thumb" placeholder="Miniatura URL" required><br><br>
+        <input id="yearForm" type="number" placeholder="Rok"><br><br>
+        <input id="duration" type="number" placeholder="Czas (min)"><br><br>
+        <input id="points" type="number" placeholder="Punkty"><br><br>
+        <select id="categoryForm"></select><br><br>
+        <button type="submit">Dodaj</button>
+      </form>
+    </div>
+  </div>
+
+<script>
+const SUPABASE_URL = "https://jjmnacolebxsifmnmqks.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+function showPage(id){
+  document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
+  document.getElementById(id).classList.remove("hidden");
+}
+
+function toggleAdmin(){
+  const modal=document.getElementById("adminModal");
+  modal.style.display = (modal.style.display==="flex")?"none":"flex";
+  modal.style.display="flex";
+}
+
+// Render filmów
+function renderMovies(containerId, movies, avgMap){
+  const container=document.getElementById(containerId);
+  container.innerHTML="";
+  movies.forEach(m=>{
+    const avg=avgMap[m.id]?avgMap[m.id].toFixed(1):"-";
+    const card=document.createElement("div");
+    card.className="movie-card";
+    card.onclick=()=>openMovie(m.id);
+    card.innerHTML=`
+      <img src="${m.thumb}" alt="${m.title}">
+      <div class="movie-info">
+        <h3>${m.title} <span class="badge">★ ${avg}</span></h3>
+        <div class="movie-meta">${m.duration||"?"} min • ${m.year||"?"}</div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+async function loadCategories(){
+  const {data}=await db.from("categories").select("*");
+  const sel=document.getElementById("category");
+  const sel2=document.getElementById("categoryForm");
+  data.forEach(c=>{
+    sel.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
+    sel2.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
+  });
+}
+
+async function loadMovies(){
+  const {data:movies}=await db.from("movies").select("*");
+  const {data:ratings}=await db.from("ratings").select("*");
+  const avg={};
+  ratings.forEach(r=>{
+    avg[r.movie_id]=(avg[r.movie_id]||[]);avg[r.movie_id].push(r.score);
+  });
+  for(const k in avg){avg[k]=avg[k].reduce((a,b)=>a+b,0)/avg[k].length;}
+
+  renderMovies("recommended",[...movies].sort((a,b)=>(avg[b.id]||0)-(avg[a.id]||0)).slice(0,5),avg);
+  renderMovies("new",[...movies].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,5),avg);
+  renderMovies("toprated",[...movies].sort((a,b)=>(avg[b.id]||0)-(avg[a.id]||0)).slice(0,5),avg);
+  renderMovies("top10",[...movies].sort((a,b)=>(avg[b.id]||0)-(avg[a.id]||0)).slice(0,10),avg);
+}
+
+async function openMovie(id){
+  const {data:movie}=await db.from("movies").select("*").eq("id",id).single();
+  const modal=document.getElementById("movieModal");
+  modal.style.display="flex";
+  document.getElementById("movieDetail").innerHTML=`
+    <h2>${movie.title}</h2>
+    <iframe src="${movie.iframe}" allowfullscreen></iframe>
+    <p>${movie.description||""}</p>
+  `;
+}
+function closeModal(){document.getElementById("movieModal").style.display="none";}
+
+async function addMovie(e){
+  e.preventDefault();
+  const payload={
+    title:document.getElementById("title").value,
+    description:document.getElementById("desc").value,
+    iframe:document.getElementById("iframe").value,
+    thumb:document.getElementById("thumb").value,
+    year:document.getElementById("yearForm").value,
+    duration:document.getElementById("duration").value,
+    points_required:document.getElementById("points").value,
+    category_id:document.getElementById("categoryForm").value
+  };
+  await db.from("movies").insert(payload);
+  alert("Dodano film!");
+  toggleAdmin();
+  loadMovies();
+}
+
+loadCategories();
+loadMovies();
+</script>
+</body>
+</html>
