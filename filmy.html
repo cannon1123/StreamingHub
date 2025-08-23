@@ -1,242 +1,380 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>StreamingHub</title>
+  <meta charset="UTF-8" />
+  <title>StreamingHub – Filmy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0e0e10;
-      color: #fff;
+    :root{
+      --bg:#0f1115; --panel:#171923; --muted:#a6adc8; --accent:#7e57c2; --chip:#2a2f45; --ok:#22c55e; --warn:#f59e0b; --err:#ef4444;
     }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 30px;
-      background: #141414;
-      border-bottom: 1px solid #222;
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:#fff}
+    header{
+      display:flex;gap:16px;align-items:center;justify-content:space-between;
+      padding:12px 20px;background:#141620;border-bottom:1px solid #202334;position:sticky;top:0;z-index:10;
     }
-    header h1 {
-      margin: 0;
-      font-size: 20px;
-      font-weight: bold;
-      color: #7e57c2;
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{font-weight:800;font-size:18px;letter-spacing:.2px}
+    .search{
+      flex:1;max-width:420px;display:flex;align-items:center;background:#11131b;border:1px solid #24283b;border-radius:10px;padding:8px 12px;
     }
-    .nav {
-      display: flex;
-      gap: 20px;
+    .search input{flex:1;border:none;background:transparent;color:#fff;outline:none}
+    nav{display:flex;gap:18px;align-items:center}
+    nav span{cursor:pointer;color:#e5e7eb;font-weight:600;opacity:.9}
+    nav span:hover{color:var(--accent)}
+    .btn{padding:8px 12px;border-radius:10px;background:#243b55;border:1px solid #2e405f;color:#fff;cursor:pointer}
+    .container{padding:22px 32px}
+    h2{margin:14px 0 12px 0;font-size:20px}
+    .row{
+      display:flex;gap:16px;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin;scrollbar-color:#2b3047 transparent;
     }
-    .nav span {
-      cursor: pointer;
-      font-weight: 500;
+    .card{
+      min-width:190px;max-width:190px;background:var(--panel);border:1px solid #24283b;border-radius:14px;overflow:hidden;flex-shrink:0;cursor:pointer;
+      transition:transform .15s ease, box-shadow .15s ease;
     }
-    .nav span:hover {
-      color: #7e57c2;
+    .card:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .thumb{width:100%;height:270px;object-fit:cover;background:#0b0d14}
+    .meta{padding:10px}
+    .title{font-size:14px;font-weight:700;line-height:1.3;margin:0 0 6px}
+    .sub{font-size:12px;color:var(--muted)}
+    .chips{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+    .chip{background:var(--chip);border:1px solid #2d3452;border-radius:999px;padding:2px 8px;font-size:12px;color:#cbd5e1}
+    .chip.ok{background:rgba(34,197,94,.1);border-color:#244c36;color:#9ae6b4}
+    .chip.cost{background:rgba(126,87,194,.12);border-color:#3a2e57;color:#d6bcfa}
+    .section{margin:24px 0}
+    /* Search results box */
+    #searchWrap{display:none;margin-top:10px}
+    /* Modal */
+    .modal-backdrop{
+      position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:50;
     }
-    .container {
-      padding: 20px 40px;
+    .modal{
+      width:min(620px,100%);background:#141620;border:1px solid #262a40;border-radius:16px;overflow:hidden;
     }
-    .filters {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .filters input, .filters select {
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #333;
-      background: #1c1c1c;
-      color: #fff;
-    }
-    .section {
-      margin-bottom: 40px;
-    }
-    .section h2 {
-      font-size: 20px;
-      margin-bottom: 15px;
-    }
-    .movies-row {
-      display: flex;
-      gap: 15px;
-      overflow-x: auto;
-      padding-bottom: 10px;
-    }
-    .movie-card {
-      min-width: 180px;
-      background: #1c1c1c;
-      border-radius: 8px;
-      overflow: hidden;
-      transition: transform 0.2s;
-      flex-shrink: 0;
-      cursor: pointer;
-    }
-    .movie-card:hover {
-      transform: scale(1.05);
-    }
-    .movie-card img {
-      width: 100%;
-      height: 250px;
-      object-fit: cover;
-    }
-    .movie-info {
-      padding: 10px;
-    }
-    .movie-info h3 {
-      font-size: 14px;
-      margin: 0 0 5px;
-      color: #fff;
-    }
-    .movie-meta {
-      font-size: 12px;
-      color: #aaa;
-    }
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      font-size: 12px;
-      background: #7e57c2;
-      border-radius: 6px;
-      margin-left: 5px;
-    }
-    .page { display: none; }
-    .page.active { display: block; }
+    .modal header{background:#15182a;border-bottom:1px solid #232742}
+    .modal .content{padding:18px}
+    .modal .actions{display:flex;gap:10px;justify-content:flex-end;padding:12px 18px;border-top:1px solid #232742;background:#121423}
+    .btn.secondary{background:#1b2033;border-color:#313a5a}
+    .alert{padding:10px 12px;border-radius:10px;background:#141a1a;border:1px solid #203636;color:#b7f0d1;margin-bottom:10px}
+    .alert.err{background:#1d1416;border-color:#3f1c24;color:#fecaca}
   </style>
 </head>
 <body>
   <header>
-    <h1>🎬 StreamingHub</h1>
-    <div class="nav">
+    <div class="brand">
+      <div class="logo">🎬 StreamingHub</div>
+      <div class="search">
+        <input id="searchInput" placeholder="Szukaj filmów..." />
+      </div>
+    </div>
+    <nav>
       <span onclick="showPage('filmy')">Filmy</span>
       <span onclick="showPage('top')">TOP 10</span>
       <span onclick="showPage('biblioteka')">Moja biblioteka</span>
-      <span onclick="logout()">Wyloguj</span>
-    </div>
+      <span class="btn" onclick="logout()">Wyloguj</span>
+    </nav>
   </header>
 
   <div class="container">
+    <!-- Wyniki wyszukiwania -->
+    <div id="searchWrap" class="section">
+      <h2>Wyniki wyszukiwania</h2>
+      <div id="searchResults" class="row"></div>
+    </div>
 
-    <!-- STRONA FILMY -->
+    <!-- Filmy – sekcje -->
     <div id="filmy" class="page active">
-      <div class="filters">
-        <select id="filterCategory" onchange="loadMovies()">
-          <option value="">Kategoria</option>
-        </select>
-        <select id="filterYear" onchange="loadMovies()">
-          <option value="">Rok</option>
-        </select>
-        <select id="filterSort" onchange="loadMovies()">
-          <option value="created_at">Sortuj: Najnowsze</option>
-          <option value="rating">Sortuj: Ocena</option>
-          <option value="year">Sortuj: Rok</option>
-          <option value="title">Sortuj: Tytuł</option>
-        </select>
-        <input type="text" id="filterSearch" placeholder="Szukaj tytułu..." onkeyup="loadMovies()">
-      </div>
-
       <div class="section">
         <h2>Polecane</h2>
-        <div id="recommended" class="movies-row"></div>
+        <div id="recommended" class="row"></div>
       </div>
 
       <div class="section">
         <h2>Nowo dodane</h2>
-        <div id="new" class="movies-row"></div>
+        <div id="newest" class="row"></div>
       </div>
 
       <div class="section">
         <h2>Najwyżej oceniane</h2>
-        <div id="toprated" class="movies-row"></div>
+        <div id="topRated" class="row"></div>
       </div>
     </div>
 
-    <!-- STRONA TOP 10 -->
-    <div id="top" class="page">
-      <h2>🏆 TOP 10</h2>
-      <div id="top10" class="movies-row"></div>
+    <!-- TOP 10 (placeholder – działa jak „Najwyżej oceniane”) -->
+    <div id="top" class="page" style="display:none">
+      <div class="section">
+        <h2>🏆 TOP 10</h2>
+        <div id="top10" class="row"></div>
+      </div>
     </div>
 
-    <!-- STRONA BIBLIOTEKA -->
-    <div id="biblioteka" class="page">
-      <h2>📚 Moja biblioteka</h2>
-      <div id="library" class="movies-row"></div>
+    <!-- Moja biblioteka – zrobimy, gdy będziesz gotów -->
+    <div id="biblioteka" class="page" style="display:none">
+      <div class="section">
+        <h2>📚 Moja biblioteka (do zrobienia)</h2>
+      </div>
     </div>
+  </div>
 
+  <!-- Modal zakupu/oglądania -->
+  <div id="payModal" class="modal-backdrop">
+    <div class="modal">
+      <header>
+        <div class="logo">🎬 StreamingHub</div>
+      </header>
+      <div class="content">
+        <div id="payAlert"></div>
+        <h3 id="payTitle" style="margin:0 0 6px"></h3>
+        <div id="payMeta" style="color:#aab2cf;font-size:14px;margin-bottom:10px"></div>
+        <div id="payCost" class="chips"></div>
+        <p id="payDesc" style="color:#cbd5e1;margin-top:8px"></p>
+      </div>
+      <div class="actions">
+        <button class="btn secondary" onclick="closeModal()">Anuluj</button>
+        <button class="btn" id="payBtn" onclick="confirmPay()">Zapłać i oglądaj</button>
+      </div>
+    </div>
   </div>
 
   <script>
-    // 🔑 KONFIGURACJA SUPABASE
-    const SUPABASE_URL = "https://jjmnacolebxsifmnmqks.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqbW5hY29sZWJ4c2lmbW5tcWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3OTcyNDQsImV4cCI6MjA3MTM3MzI0NH0.1hNoBQ4wDuA_t_vscorQ6FRb-aW8IxHEDxuZKEhndv0"; // 🔒 nie dawaj service key!
-    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    // =========================
+    //  SUPABASE – konfiguracja
+    // =========================
+    const SUPABASE_URL = "https://jjmnacolebxsifmnmqks.supabase.co";      // <- podmień
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqbW5hY29sZWJ4c2lmbW5tcWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3OTcyNDQsImV4cCI6MjA3MTM3MzI0NH0.1hNoBQ4wDuA_t_vscorQ6FRb-aW8IxHEDxuZKEhndv0";                     // <- podmień
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
     });
 
-    // ✅ Przełączanie podstron
-    function showPage(id) {
-      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-      document.getElementById(id).classList.add("active");
+    // Prosty "router" podstron
+    function showPage(id){
+      document.querySelectorAll(".page").forEach(p=>p.style.display="none");
+      document.getElementById(id).style.display="block";
+      if(id==="top") loadTop10();
     }
 
-    // 🚪 Wylogowanie
-    async function logout() {
+    async function logout(){
       await db.auth.signOut();
       window.location.href = "index.html";
     }
 
-    // 🎬 Renderowanie filmów
-    function renderMovies(containerId, movies) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = "";
-      movies.forEach(movie => {
-        const card = document.createElement("div");
-        card.className = "movie-card";
-        card.onclick = () => window.location.href = "watch.html?id=" + movie.id;
-        card.innerHTML = `
-          <img src="${movie.image_url || 'https://via.placeholder.com/180x250'}" alt="${movie.title}">
-          <div class="movie-info">
-            <h3>${movie.title} <span class="badge">${movie.rating || "?"}</span></h3>
-            <div class="movie-meta">czas: ${movie.duration || "?"} min • rok ${movie.year || "?"}</div>
+    // =========================
+    //  Render kart filmu
+    // =========================
+    function card(movie){
+      const div=document.createElement("div");
+      div.className="card";
+      div.onclick=()=> openPayModal(movie);
+      div.innerHTML = `
+        <img class="thumb" src="${movie.thumb || 'https://via.placeholder.com/190x270?text=Brak+miniatury'}" alt="${movie.title}">
+        <div class="meta">
+          <div class="title">${movie.title}</div>
+          <div class="sub">czas: ${movie.duration ?? "?"} min • rok: ${movie.year ?? "?"}</div>
+          <div class="chips">
+            <span class="chip cost">💎 ${movie.points_required ?? 0} pkt</span>
+            ${movie._views != null ? `<span class="chip">👁️ ${movie._views}</span>` : ""}
+            ${movie._rating != null ? `<span class="chip ok">⭐ ${movie._rating.toFixed(1)}</span>` : ""}
           </div>
-        `;
-        container.appendChild(card);
-      });
+        </div>
+      `;
+      return div;
     }
 
-    // 📥 Pobieranie filmów z Supabase
-    async function loadMovies() {
-      const category = document.getElementById("filterCategory")?.value || "";
-      const year = document.getElementById("filterYear")?.value || "";
-      const sort = document.getElementById("filterSort")?.value || "created_at";
-      const search = document.getElementById("filterSearch")?.value || "";
+    function renderList(containerId, movies){
+      const el=document.getElementById(containerId);
+      el.innerHTML="";
+      movies.forEach(m=> el.appendChild(card(m)));
+    }
 
-      let query = db.from("movies").select("*");
+    // =========================
+    //  Ładowanie sekcji
+    // =========================
+    async function loadAll(){
+      await Promise.all([loadRecommended(), loadNewest(), loadTopRated()]);
+    }
 
-      if (category) query = query.eq("category_id", category);
-      if (year) query = query.eq("year", year);
-      if (search) query = query.ilike("title", `%${search}%`);
+    // Polecane – wg wyświetleń (watch_history)
+    async function loadRecommended(limit=15){
+      // Próba przez RPC / widok
+      let data=null, error=null;
 
-      if (sort === "rating") query = query.order("rating", { ascending: false });
-      else if (sort === "title") query = query.order("title", { ascending: true });
-      else if (sort === "year") query = query.order("year", { ascending: false });
-      else query = query.order("created_at", { ascending: false });
-
-      const { data, error } = await query;
-      if (error) {
-        console.error("❌ Błąd:", error);
+      // 1) Jeśli masz widok movie_stats (patrz SQL niżej)
+      ({ data, error } = await db
+        .from("movie_stats")
+        .select("id,title,thumb,year,duration,points_required,views,avg_rating")
+        .order("views", { ascending:false })
+        .limit(limit)
+      );
+      if(!error && data?.length){
+        data = data.map(m => ({...m, _views: m.views, _rating: m.avg_rating}));
+        renderList("recommended", data);
         return;
       }
 
-      renderMovies("recommended", data.slice(0,5));
-      renderMovies("new", data.slice(-5));
-      renderMovies("toprated", data.sort((a,b) => b.rating - a.rating).slice(0,5));
-      renderMovies("top10", data.sort((a,b) => b.rating - a.rating).slice(0,10));
+      // 2) Fallback: same filmy (gdy brak widoku/relacji)
+      const res = await db.from("movies").select("*").order("created_at", {descending:true}).limit(limit);
+      if(res.error){ console.error(res.error); return; }
+      renderList("recommended", res.data);
     }
 
-    document.addEventListener("DOMContentLoaded", loadMovies);
+    // Nowo dodane – po created_at
+    async function loadNewest(limit=15){
+      const { data, error } = await db
+        .from("movies")
+        .select("*")
+        .order("created_at", { ascending:false })
+        .limit(limit);
+      if(error){ console.error(error); return; }
+      renderList("newest", data);
+    }
+
+    // Najwyżej oceniane – średnia z ratings (RPC/widok), fallback do braku
+    async function loadTopRated(limit=15){
+      let { data, error } = await db
+        .from("movie_stats")
+        .select("id,title,thumb,year,duration,points_required,views,avg_rating")
+        .order("avg_rating", { ascending:false })
+        .limit(limit);
+      if(!error && data?.length){
+        data = data.map(m => ({...m, _views:m.views, _rating:m.avg_rating||0}));
+        renderList("topRated", data);
+        return;
+      }
+      // fallback: jeśli nie ma ratings
+      const fallback = await db.from("movies").select("*").order("created_at", {descending:true}).limit(limit);
+      if(fallback.error){ console.error(fallback.error); return; }
+      renderList("topRated", fallback.data);
+    }
+
+    // TOP 10 – użyjemy tego samego co top rated
+    async function loadTop10(){
+      let { data, error } = await db
+        .from("movie_stats")
+        .select("id,title,thumb,year,duration,points_required,views,avg_rating")
+        .order("avg_rating", { ascending:false })
+        .limit(10);
+      if(error){ console.error(error); return; }
+      data = data.map(m => ({...m, _views:m.views, _rating:m.avg_rating||0}));
+      renderList("top10", data);
+    }
+
+    // =========================
+    //  Szukajka przy logo
+    // =========================
+    let searchTimer;
+    document.getElementById("searchInput").addEventListener("input", e=>{
+      clearTimeout(searchTimer);
+      const q = e.target.value.trim();
+      if(!q){
+        document.getElementById("searchWrap").style.display="none";
+        return;
+      }
+      searchTimer = setTimeout(()=> searchMovies(q), 250);
+    });
+
+    async function searchMovies(q){
+      const { data, error } = await db
+        .from("movies")
+        .select("id,title,thumb,year,duration,points_required")
+        .ilike("title", `%${q}%`)
+        .limit(30);
+      if(error){ console.error(error); return; }
+      document.getElementById("searchWrap").style.display="block";
+      renderList("searchResults", data);
+    }
+
+    // =========================
+    //  Paywall (punkty)
+    // =========================
+    let selectedMovie = null;
+
+    function openPayModal(movie){
+      selectedMovie = movie;
+      document.getElementById("payTitle").textContent = movie.title;
+      document.getElementById("payMeta").textContent = `Rok: ${movie.year ?? "?"} • Czas: ${movie.duration ?? "?"} min`;
+      document.getElementById("payDesc").textContent = movie.description || "";
+      document.getElementById("payCost").innerHTML = `
+        <span class="chip cost">💎 Wymagane: ${movie.points_required ?? 0} pkt</span>
+      `;
+      document.getElementById("payAlert").innerHTML = "";
+      document.getElementById("payModal").style.display = "flex";
+    }
+    function closeModal(){
+      document.getElementById("payModal").style.display = "none";
+      selectedMovie = null;
+    }
+
+    async function confirmPay(){
+      if(!selectedMovie) return;
+
+      // 1) user & profile
+      const { data: { user } } = await db.auth.getUser();
+      if(!user){ window.location.href="index.html"; return; }
+
+      const { data: profile, error: pErr } = await db
+        .from("profiles")
+        .select("points")
+        .eq("id", user.id)
+        .single();
+      if(pErr){ console.error(pErr); showPayError("Nie udało się pobrać punktów."); return; }
+
+      // 2) sprawdź, czy już kupione (aby nie płacić ponownie)
+      const { data: already } = await db
+        .from("purchases")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("movie_id", selectedMovie.id)
+        .maybeSingle();
+
+      if(already){ // już ma dostęp – oglądaj
+        goWatch(selectedMovie.id);
+        return;
+      }
+
+      const cost = Number(selectedMovie.points_required || 0);
+      if((profile?.points ?? 0) < cost){
+        showPayError(`Masz za mało punktów. Dostęp kosztuje ${cost} pkt.`);
+        return;
+      }
+
+      // 3) transakcja – najpierw spróbuj RPC (atomowo)
+      const rpc = await db.rpc("purchase_movie", { p_movie_id: selectedMovie.id });
+      if(!rpc.error){
+        goWatch(selectedMovie.id);
+        return;
+      }
+
+      // 4) fallback (gdy nie masz RPC): dwa kroki
+      // Uwaga: to nie jest w 100% atomowe – polecam dodać RPC z sekcji SQL poniżej.
+      const upd = await db
+        .from("profiles")
+        .update({ points: (profile.points - cost) })
+        .eq("id", user.id)
+        .select()
+        .single();
+      if(upd.error){ console.error(upd.error); showPayError("Nie udało się potrącić punktów."); return; }
+
+      const ins = await db
+        .from("purchases")
+        .insert({ user_id: user.id, movie_id: selectedMovie.id, points_spent: cost })
+        .select().single();
+      if(ins.error){ console.error(ins.error); showPayError("Nie udało się zapisać zakupu."); return; }
+
+      goWatch(selectedMovie.id);
+    }
+
+    function showPayError(msg){
+      document.getElementById("payAlert").innerHTML = `<div class="alert err">❌ ${msg}</div>`;
+    }
+    function goWatch(id){
+      closeModal();
+      window.location.href = `watch.html?id=${id}`;
+    }
+
+    // Start
+    loadAll();
   </script>
 </body>
 </html>
