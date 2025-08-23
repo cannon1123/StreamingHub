@@ -349,6 +349,28 @@ $('#q').addEventListener('input', applyFilters);
     document.getElementById(id).addEventListener('change', applyFilters);
   });
 })();
+function renderMovies(containerId, movies) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  movies.forEach(movie => {
+    const card = document.createElement("div");
+    card.className = "movie-card";
+    card.innerHTML = `
+      <img src="${movie.thumb || 'https://via.placeholder.com/180x250'}" alt="${movie.title}">
+      <div class="movie-info">
+        <h3>${movie.title} <span class="badge">${movie.avg_rating ? movie.avg_rating.toFixed(1) : "–"}</span></h3>
+        <div class="movie-meta">
+          czas: ${movie.duration || "?"} min • rok ${movie.year || "?"}
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
 // 🎬 Pobieranie filmów z Supabase
 async function loadMovies() {
   const { data: movies, error } = await db
