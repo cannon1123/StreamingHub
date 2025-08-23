@@ -272,7 +272,15 @@ async function applyFilters(){
   if(sort==='year') list.sort((a,b)=> (b.year||0) - (a.year||0));
   if(sort==='popular') list.sort((a,b)=> ( (pop[b.id]||0) - (pop[a.id]||0) ));
 
-  $('#list-results').innerHTML = list.map(m=>card(m, avg)).join('');
+  // 🔥 pokaż tylko wyniki filtrowania
+  $('#list-results').innerHTML = list.length 
+    ? list.map(m=>card(m, avg)).join('') 
+    : '<div class="alert">Brak wyników.</div>';
+
+  // 🔥 wyczyść stare sekcje
+  $('#list-recommended').innerHTML = '';
+  $('#list-new').innerHTML = '';
+  $('#list-top').innerHTML = '';
 }
 
 /* ==== Szczegóły filmu + odtwarzacz ==== */
@@ -333,7 +341,7 @@ async function addMovie(){
   await applyFilters();
 
   // szukaj po Enter
-  $('#q').addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); applyFilters(); } });
+$('#q').addEventListener('input', applyFilters);
   // automatycznie filtruj, gdy zmieniasz pola
   ['f-category','f-year','f-min','f-sort'].forEach(id => {
     document.getElementById(id).addEventListener('change', applyFilters);
