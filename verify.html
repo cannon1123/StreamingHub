@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <title>Weryfikacja konta</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Trwa weryfikacja konta...</h1>
+  <div id="status"></div>
+
+  <script>
+    const SUPABASE_URL = "https://jjmnacolebxsifmnmqks.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqbW5hY29sZWJ4c2lmbW5tcWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3OTcyNDQsImV4cCI6MjA3MTM3MzI0NH0.1hNoBQ4wDuA_t_vscorQ6FRb-aW8IxHEDxuZKEhndv0";
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function verifyAccount() {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      const status = document.getElementById("status");
+
+      if (!token) {
+        status.innerText = "❌ Brak tokenu w linku";
+        return;
+      }
+
+      const { data, error } = await db.from("profiles")
+        .select("*")
+        .eq("verify_token", token)
+        .single();
+
+      if (error || !data) {
+        status.innerText = "❌ Nieprawidłowy lub wygasły link";
+        return;
+      }
+
+      // Oznacz konto jako zweryfikowane
+      await db.from("profiles")
+        .update({ verified: true, verify_token: null })
+        .eq("id", data.id);
+
+      status.innerText = "✔️ Konto zostało zweryfikowane! Możesz się teraz zalogować.";
+      setTimeout(() => window.location.href = "index.html", 2000);
+    }
+
+    verifyAccount();
+  </script>
+</body>
+</html>
