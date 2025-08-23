@@ -361,10 +361,14 @@ async function loadMovies() {
     return;
   }
 
-  const { data: ratings } = await db
-    .from("ratings")
-    .select("movie_id, avg(score)")
-    .group("movie_id");
+const { data: ratings, error: ratingsError } = await db
+  .from("ratings")
+  .select("movie_id, avg:score");
+
+if (ratingsError) {
+  console.error("Błąd ocen:", ratingsError);
+}
+
 
   let moviesWithRatings = movies.map(m => {
     const r = ratings ? ratings.find(r => r.movie_id === m.id) : null;
