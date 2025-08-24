@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>StreamingHub</title>
+  <style>
+    :root{--bg:#0b0d10;--card:#151922;--text:#e3e7ee;--muted:#a1a9b8;--brand:#4f7cff;--border:#232a37}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto}
+    a{color:var(--text);text-decoration:none}
+    .container{max-width:1100px;margin:0 auto;padding:16px}
+    header{position:sticky;top:0;background:rgba(11,13,16,.8);backdrop-filter:blur(6px);z-index:10}
+    .nav{display:flex;gap:12px;align-items:center;padding:12px 16px}
+    .brand{font-weight:800}
+    .nav input[type=search]{flex:1;background:#0e1218;border:1px solid var(--border);color:#fff;padding:10px 12px;border-radius:12px}
+    .menu a,.menu button{padding:8px 10px;color:var(--muted);background:none;border:none;cursor:pointer}
+    .btn{background:var(--brand);color:#fff;padding:10px 14px;border-radius:12px;border:none;cursor:pointer}
+    .btn.secondary{background:#2a3446}
+    .badge{font-size:12px;color:#fff;background:#2a3446;padding:2px 8px;border-radius:999px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+    .card.p{padding:12px}
+    .card img{width:100%;height:200px;object-fit:cover;display:block}
+    .small{font-size:12px;color:var(--muted)}
+    .alert{background:#152031;padding:10px;border-radius:10px;color:#b7c4e6;margin:8px 0}
+    .flex{display:flex;gap:12px;align-items:center}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .mt-2{margin-top:8px}.mt-4{margin-top:16px}.mt-8{margin-top:32px}
+    textarea,input,select{width:100%;padding:10px;background:#0e1218;border:1px solid var(--border);color:#fff;border-radius:10px}
+    footer{color:var(--muted);text-align:center;padding:30px 0}
+    .hidden{display:none}
+    /* video */
+    .video-container{position:relative;width:100%;padding-bottom:56.25%;height:0;overflow:hidden;background:black;border-radius:22px}
+    .video-container iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+  </style>
+</head>
+<body>
+
+  <!-- Nagłówek -->
+  <header>
+    <div class="nav">
+      <span class="brand">StreamingHub</span>
+      <input type="search" placeholder="Szukaj..."/>
+      <div class="menu">
+        <a href="#">Strona główna</a>
+        <a href="#">Kategorie</a>
+        <a href="#">Kontakt</a>
+        <button class="btn secondary">Zaloguj</button>
+        <button class="btn">Zarejestruj</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Główna zawartość -->
+  <div class="container">
+    <h2>Witaj na StreamingHub</h2>
+    <div class="alert">✔️ Twoje konto zostało zweryfikowane!</div>
+
+    <h3 class="mt-4">Polecane</h3>
+    <div class="grid mt-2">
+      <div class="card">
+        <img src="https://picsum.photos/400/200?random=1" alt=""/>
+        <div class="p">
+          <h4>Film 1</h4>
+          <p class="small">Opis filmu</p>
+        </div>
+      </div>
+      <div class="card">
+        <img src="https://picsum.photos/400/200?random=2" alt=""/>
+        <div class="p">
+          <h4>Film 2</h4>
+          <p class="small">Opis filmu</p>
+        </div>
+      </div>
+      <div class="card">
+        <img src="https://picsum.photos/400/200?random=3" alt=""/>
+        <div class="p">
+          <h4>Film 3</h4>
+          <p class="small">Opis filmu</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="mt-8">Dodaj komentarz</h3>
+    <div class="row mt-2">
+      <input type="text" placeholder="Imię"/>
+      <input type="email" placeholder="Email"/>
+    </div>
+    <textarea class="mt-2" placeholder="Twój komentarz..."></textarea>
+    <button class="btn mt-2">Wyślij</button>
+
+    <h3 class="mt-8">Trailer</h3>
+    <div class="video-container mt-2">
+      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <!-- Stopka -->
+  <footer>
+    © 2025 StreamingHub. Wszelkie prawa zastrzeżone.
+  </footer>
+
+</body>
+</html>
