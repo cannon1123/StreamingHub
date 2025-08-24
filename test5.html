@@ -407,14 +407,7 @@ async function openMovie(id){
     $('#movie-detail').innerHTML = '<div class="alert">Nie znaleziono filmu</div>';
     return;
   }
-function closeMovie(){
-  document.getElementById('movie-modal').style.display = 'none';
-  async function loadCurrentUser() {
-  const { data: { user }, error } = await db.auth.getUser();
-  if (error || !user) {
-    console.error("❌ Brak zalogowanego użytkownika", error);
-    return;
-  }
+
 
   // user.id = uuid z auth.users
   const { data: profile, error: profileError } = await db
@@ -432,7 +425,7 @@ function closeMovie(){
   console.log("🔑 Zalogowany:", profile.username, "| punkty:", profile.points);
 }
 
-}
+
 
   // 🔎 sprawdz czy film jest odblokowany
   const { data: unlocked } = await db
@@ -472,8 +465,26 @@ function closeMovie(){
     <p style="margin-top:12px">${esc(m.description||'Brak opisu.')}</p>
   `;
   $('#movie-detail').innerHTML = content;
+
+
+/* ==== Szczegóły filmu + odtwarzacz ==== */
+async function openMovie(id){
+  $('#movie-modal').style.display = 'flex';
+  $('#movie-detail').innerHTML = 'Ładowanie…';
+  const { data: m, error } = await db.from('movies').select('*').eq('id', id).single();
+  if(error || !m){
+    $('#movie-detail').innerHTML = '<div class="alert">Nie znaleziono filmu</div>';
+    return;
+  }
+
+  // ... reszta kodu ...
+  $('#movie-detail').innerHTML = content;
 }
 
+// ✅ Funkcja zamykania modala
+function closeMovie(){
+  document.getElementById('movie-modal').style.display = 'none';
+}
 
 /* ==== Admin: dodawanie filmu ==== */
 function toggleAdmin(){ const el = $('#admin-modal'); el.style.display = el.style.display==='flex' ? 'none' : 'flex'; }
