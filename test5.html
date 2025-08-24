@@ -163,6 +163,61 @@ function logout(){ /* pod auth później */ alert('Wyloguj: do spięcia z auth.'
 const $ = sel => document.querySelector(sel);
 const esc = s => String(s||'').replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[m]));
 
+// 🪙 Kupowanie filmu
+async function buyMovie(movieId, pointsRequired) {
+  const userId = currentUserId; // <- zakładam, że masz ustawione po logowaniu
+
+  // pobierz aktualne punkty użytkownika
+  const { data: user, error: userError } = await db
+    .from('users')
+    .select('id, points')
+    .eq('id', userId)
+    .single();
+
+  if (userError || !user) {
+    alert("❌ Błąd: nie znaleziono użytkownika");
+    return;
+  }
+
+  if (user.points < pointsRequired) {
+    alert("⚠️ Masz za mało punktów!");
+    return;
+  }
+
+  // odejmij punkty
+  const { error: updateError } = await db
+    .from('users')
+    .update({ points: user.points - pointsRequired })
+    .eq('id', userId);
+
+  if (updateError) {
+    alert("❌ Błąd przy aktualizacji punktów");
+    return;
+  }
+
+  // wpis do unlocks
+  const { error: unlockError } = await db
+    .from('unlocks')
+    .insert({ user_id: userId, movie_id: movieId });
+
+  if (unlockError) {
+    alert("❌ Błąd przy odblokowaniu filmu");
+    return;
+  }
+
+  // log punktów
+  await db.from('points_log').insert({
+    user_id: userId,
+    change: -pointsRequired,
+    reason: `Zakup filmu ID=${movieId}`
+  });
+
+  alert("✅ Film został odblokowany!");
+  // odśwież widok filmu
+  await openMovie(movieId);
+}
+
+
 /* ==== Ładowanie kategorii do filtrów i modala ==== */
 async function loadCategories(){
   const { data, error } = await db.from('categories').select('*').order('name', {ascending:true});
