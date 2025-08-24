@@ -446,6 +446,31 @@ async function loadMovies() {
 
   // ⭐ Najwyżej oceniane
   renderMovies("list-top", moviesWithRatings.sort((a,b)=>b.avg_rating - a.avg_rating).slice(0,5));
+// Nowo dodane (ostatnie 5 po created_at)
+document.querySelector('#list-new').innerHTML =
+  movies
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 5)
+    .map(m => card(m))
+    .join("");
+
+// Polecane (losowe 5)
+document.querySelector('#list-recommended').innerHTML =
+  [...movies]
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 5)
+    .map(m => card(m))
+    .join("");
+
+// Najwyżej oceniane (po avg_rating, jeśli masz w movies)
+document.querySelector('#list-top').innerHTML =
+  [...movies]
+    .filter(m => m.avg_rating)
+    .sort((a, b) => b.avg_rating - a.avg_rating)
+    .slice(0, 5)
+    .map(m => card(m))
+    .join("");
+
 }
 
 </script>
