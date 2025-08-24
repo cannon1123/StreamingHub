@@ -409,12 +409,7 @@ async function openMovie(id){
   }
 function closeMovie(){
   document.getElementById('movie-modal').style.display = 'none';
-  async function loadCurrentUser() {
-  const { data: { user }, error } = await db.auth.getUser();
-  if (error || !user) {
-    console.error("❌ Brak zalogowanego użytkownika", error);
-    return;
-  }
+}
 
   // user.id = uuid z auth.users
   const { data: profile, error: profileError } = await db
@@ -432,7 +427,7 @@ function closeMovie(){
   console.log("🔑 Zalogowany:", profile.username, "| punkty:", profile.points);
 }
 
-}
+
 
   // 🔎 sprawdz czy film jest odblokowany
   const { data: unlocked } = await db
@@ -458,6 +453,12 @@ function closeMovie(){
       Rok: ${m.year ?? "?"} • Długość: ${m.duration ?? "?"} min
       ${m.points_required ? `• Wymagane punkty: ${m.points_required}` : ""}
     </div>
+    async function loadHome() {
+
+
+  }
+}
+
 
     ${buyButton}
 
@@ -472,7 +473,7 @@ function closeMovie(){
     <p style="margin-top:12px">${esc(m.description||'Brak opisu.')}</p>
   `;
   $('#movie-detail').innerHTML = content;
-}
+
 
 
 /* ==== Admin: dodawanie filmu ==== */
