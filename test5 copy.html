@@ -226,6 +226,7 @@ function card(m, avg) {
 }
 
 
+
 /* ==== Widok: strona główna + top10 ==== */
 async function loadHome(){
   const [movies, ratings, history] = await Promise.all([fetchAllMovies(), fetchRatings(), fetchHistory()]);
