@@ -151,6 +151,36 @@ const SUPABASE_URL = "https://jjmnacolebxsifmnmqks.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqbW5hY29sZWJ4c2lmbW5tcWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3OTcyNDQsImV4cCI6MjA3MTM3MzI0NH0.1hNoBQ4wDuA_t_vscorQ6FRb-aW8IxHEDxuZKEhndv0";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+/** UUID użytkownika z auth/profiles; ustawimy go w kolejnym kroku */
+let currentUserId = null;
+/* ==== Pobranie aktualnego użytkownika ==== */
+async function loadCurrentUser() {
+  const { data: { user }, error } = await db.auth.getUser();
+  if (error || !user) {
+    console.error("❌ Brak zalogowanego użytkownika", error);
+    return;
+  }
+
+  // user.id = uuid z auth.users
+  const { data: profile, error: profileError } = await db
+    .from('profiles')
+    .select('id, username, points')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError) {
+    console.error("❌ Błąd pobierania profilu:", profileError);
+    return;
+  }
+
+  currentUserId = profile.id;
+  console.log("🔑 Zalogowany:", profile.username, "| punkty:", profile.points);
+
+  // (opcjonalnie) pokaż punkty w headerze
+  const el = document.getElementById("user-points");
+  if (el) el.textContent = profile.points + " pkt";
+}
+
 /* ==== Router (3 „podstrony”) ==== */
 function showPage(name){
   document.getElementById('page-films').classList.toggle('hidden', name!=='films');
@@ -416,6 +446,7 @@ async function addMovie(){
 (async function init(){
   await loadCategories();
   await loadHome();
+  await loadCurrentUser();
   await applyFilters();
 
   // szukaj po Enter
