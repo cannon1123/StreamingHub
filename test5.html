@@ -345,14 +345,38 @@ async function openMovie(id){
   $('#movie-modal').style.display = 'flex';
   $('#movie-detail').innerHTML = 'Ładowanie…';
   const { data: m, error } = await db.from('movies').select('*').eq('id', id).single();
-  if(error || !m){ $('#movie-detail').innerHTML = '<div class="alert">Nie znaleziono filmu</div>'; return; }
+  if(error || !m){
+    $('#movie-detail').innerHTML = '<div class="alert">Nie znaleziono filmu</div>';
+    return;
+  }
+
+  // 🔎 sprawdz czy film jest odblokowany
+  const { data: unlocked } = await db
+    .from('unlocks')
+    .select('*')
+    .eq('movie_id', id)
+    .eq('user_id', currentUserId)
+    .maybeSingle();
+
+  let buyButton = "";
+  if (m.points_required > 0 && !unlocked) {
+    buyButton = `<button class="btn" onclick="buyMovie(${id}, ${m.points_required})">
+      Kup za ${m.points_required} pkt
+    </button>`;
+  }
 
   const content = `
     <div class="row">
       <h3 style="margin:0">${esc(m.title)}</h3>
       <button class="btn secondary" onclick="closeMovie()">Zamknij</button>
     </div>
-    <div class="small" style="margin-top:4px">Rok: ${m.year??'?'} • Długość: ${m.duration??'?'} min ${m.points_required?`• Wymagane punkty: ${m.points_required}`:''}</div>
+    <div class="small" style="margin-top:4px">
+      Rok: ${m.year ?? "?"} • Długość: ${m.duration ?? "?"} min
+      ${m.points_required ? `• Wymagane punkty: ${m.points_required}` : ""}
+    </div>
+
+    ${buyButton}
+
     ${m.iframe ? `
       <div class="video" style="margin-top:12px">
         <iframe src="${esc(m.iframe)}" allowfullscreen></iframe>
@@ -360,14 +384,12 @@ async function openMovie(id){
       </div>` :
       `<img src="${esc(m.thumb||'')}" style="width:100%;max-height:360px;object-fit:cover;border-radius:14px;margin-top:12px">`
     }
+
     <p style="margin-top:12px">${esc(m.description||'Brak opisu.')}</p>
-    <div class="row" style="margin-top:8px">
-      <a class="btn" href="${esc(m.iframe||'#')}" target="_blank">Otwórz źródło</a>
-    </div>
   `;
   $('#movie-detail').innerHTML = content;
 }
-function closeMovie(){ $('#movie-modal').style.display = 'none'; }
+
 
 /* ==== Admin: dodawanie filmu ==== */
 function toggleAdmin(){ const el = $('#admin-modal'); el.style.display = el.style.display==='flex' ? 'none' : 'flex'; }
