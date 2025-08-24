@@ -203,26 +203,28 @@ function computePopularity(movies, history){
   const pop = {};
   for(const m of movies){ pop[m.id] = cnt[m.id]||0; }
   return pop;
+function card(m, avg) {
+    return `
+    <div class="movie-card">
+        <img src="${m.thumbnail || 'noimg.jpg'}" alt="${m.title}">
+        <h3><a href="watch.html?id=${m.id}">${m.title}</a></h3>
+        <p>czas: ${m.duration} min • rok: ${m.year}</p>
+        <p>⭐ ${avg || 0}</p>
+
+        <div class="actions">
+            ${m.points_required > 0 ? `
+                <button class="buy-btn" onclick="buyMovie(${m.id}, ${m.points_required})">
+                    Kup za ${m.points_required} pkt
+                </button>
+            ` : `
+                <button class="watch-btn" onclick="goWatch(${m.id})">
+                    Oglądaj
+                </button>
+            `}
+        </div>
+    </div>`;
 }
 
-/* ==== Render karty filmu ==== */
-function card(m, avgMap, clickHandler='openMovie'){
-  const avg = avgMap ? avgMap[m.id] : null;
-  const rating = avg!=null ? avg.toFixed(1) : '-';
-  return `
-  <div class="card">
-    <a href="#" onclick="${clickHandler}(${m.id});return false;">
-      <img src="${esc(m.thumb)}" alt="${esc(m.title)}">
-    </a>
-    <div class="p">
-      <div class="row">
-        <strong><a href="#" onclick="${clickHandler}(${m.id});return false;">${esc(m.title)}</a></strong>
-        <span class="badge">★ ${rating}</span>
-      </div>
-      <div class="small">czas: ${m.duration??'?'} min • rok: ${m.year??'?'}</div>
-    </div>
-  </div>`;
-}
 
 /* ==== Widok: strona główna + top10 ==== */
 async function loadHome(){
@@ -380,7 +382,7 @@ function renderMovies(containerId, movies) {
   }
 
   console.log("🎬 Render →", containerId, movies); // 🔎 debug
-
+}
   container.innerHTML = "";
   movies.forEach(movie => {
     const card = document.createElement("div");
