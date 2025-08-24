@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>StreamingHub</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StreamingHub • Supabase</title>
   <style>
     :root{--bg:#0b0d10;--card:#151922;--text:#e3e7ee;--muted:#a1a9b8;--brand:#4f7cff;--border:#232a37}
     *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto}
@@ -32,72 +33,5 @@
     .video-container{position:relative;width:100%;padding-bottom:56.25%;height:0;overflow:hidden;background:black;border-radius:22px}
     .video-container iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
   </style>
-</head>
-<body>
-
-  <!-- Nagłówek -->
-  <header>
-    <div class="nav">
-      <span class="brand">StreamingHub</span>
-      <input type="search" placeholder="Szukaj..."/>
-      <div class="menu">
-        <a href="#">Strona główna</a>
-        <a href="#">Kategorie</a>
-        <a href="#">Kontakt</a>
-        <button class="btn secondary">Zaloguj</button>
-        <button class="btn">Zarejestruj</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Główna zawartość -->
-  <div class="container">
-    <h2>Witaj na StreamingHub</h2>
-    <div class="alert">✔️ Twoje konto zostało zweryfikowane!</div>
-
-    <h3 class="mt-4">Polecane</h3>
-    <div class="grid mt-2">
-      <div class="card">
-        <img src="https://picsum.photos/400/200?random=1" alt=""/>
-        <div class="p">
-          <h4>Film 1</h4>
-          <p class="small">Opis filmu</p>
-        </div>
-      </div>
-      <div class="card">
-        <img src="https://picsum.photos/400/200?random=2" alt=""/>
-        <div class="p">
-          <h4>Film 2</h4>
-          <p class="small">Opis filmu</p>
-        </div>
-      </div>
-      <div class="card">
-        <img src="https://picsum.photos/400/200?random=3" alt=""/>
-        <div class="p">
-          <h4>Film 3</h4>
-          <p class="small">Opis filmu</p>
-        </div>
-      </div>
-    </div>
-
-    <h3 class="mt-8">Dodaj komentarz</h3>
-    <div class="row mt-2">
-      <input type="text" placeholder="Imię"/>
-      <input type="email" placeholder="Email"/>
-    </div>
-    <textarea class="mt-2" placeholder="Twój komentarz..."></textarea>
-    <button class="btn mt-2">Wyślij</button>
-
-    <h3 class="mt-8">Trailer</h3>
-    <div class="video-container mt-2">
-      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
-    </div>
-  </div>
-
-  <!-- Stopka -->
-  <footer>
-    © 2025 StreamingHub. Wszelkie prawa zastrzeżone.
-  </footer>
-
 </body>
 </html>
