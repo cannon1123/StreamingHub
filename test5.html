@@ -181,6 +181,34 @@ async function loadCurrentUser() {
   if (el) el.textContent = profile.points + " pkt";
 }
 
+/* ==== Pobranie aktualnego użytkownika ==== */
+async function loadCurrentUser() {
+  const { data: { user }, error } = await db.auth.getUser();
+  if (error || !user) {
+    console.error("❌ Brak zalogowanego użytkownika", error);
+    return;
+  }
+
+  // user.id = uuid z auth.users
+  const { data: profile, error: profileError } = await db
+    .from('profiles')
+    .select('id, username, points')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError) {
+    console.error("❌ Błąd pobierania profilu:", profileError);
+    return;
+  }
+
+  currentUserId = profile.id;
+  console.log("🔑 Zalogowany:", profile.username, "| punkty:", profile.points);
+
+  // (opcjonalnie) pokaż punkty w headerze
+  const el = document.getElementById("user-points");
+  if (el) el.textContent = profile.points + " pkt";
+}
+
 /* ==== Router (3 „podstrony”) ==== */
 function showPage(name){
   document.getElementById('page-films').classList.toggle('hidden', name!=='films');
@@ -379,6 +407,32 @@ async function openMovie(id){
     $('#movie-detail').innerHTML = '<div class="alert">Nie znaleziono filmu</div>';
     return;
   }
+function closeMovie(){
+  document.getElementById('movie-modal').style.display = 'none';
+  async function loadCurrentUser() {
+  const { data: { user }, error } = await db.auth.getUser();
+  if (error || !user) {
+    console.error("❌ Brak zalogowanego użytkownika", error);
+    return;
+  }
+
+  // user.id = uuid z auth.users
+  const { data: profile, error: profileError } = await db
+    .from('profiles')
+    .select('id, username, points')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError) {
+    console.error("❌ Błąd pobierania profilu:", profileError);
+    return;
+  }
+
+  currentUserId = profile.id;
+  console.log("🔑 Zalogowany:", profile.username, "| punkty:", profile.points);
+}
+
+}
 
   // 🔎 sprawdz czy film jest odblokowany
   const { data: unlocked } = await db
