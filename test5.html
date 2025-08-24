@@ -237,9 +237,9 @@ async function loadHome(){
   // Najwyżej oceniane
   const top = [...movies].sort((a,b)=> ( (avg[b.id]||0) - (avg[a.id]||0) )).slice(0,12);
 
-//  $('#list-recommended').innerHTML = recommended.map(m=>card(m, avg)).join('');
-//  $('#list-new').innerHTML = newest.map(m=>card(m, avg)).join('');
-//  $('#list-top').innerHTML = top.map(m=>card(m, avg)).join('');
+  $('#list-recommended').innerHTML = recommended.map(m=>card(m, avg)).join('');
+  $('#list-new').innerHTML = newest.map(m=>card(m, avg)).join('');
+  $('#list-top').innerHTML = top.map(m=>card(m, avg)).join('');
 //$('#list-filtered').innerHTML = '';
 
 
@@ -332,7 +332,6 @@ async function addMovie(){
   if(error){ alert('Błąd dodawania: '+error.message); return; }
   closeAdmin();
   await loadCategories();
-  await loadHome();
   await applyFilters();
 }
 
