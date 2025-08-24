@@ -146,6 +146,26 @@ hr{border:none;border-top:1px solid var(--border);margin:16px 0}
 </div>
 
 <script>
+  // Tutaj umieść poprawioną funkcję
+  async function showCategories() {
+    const out = document.getElementById('supabase-view');
+    document.getElementById('app').style.display = 'none';
+    out.style.display = 'block';
+    out.innerHTML = `...`;
+    
+    try {
+      const { data, error } = await supabase.from('categories').select('*').order('id', { ascending: true });
+      // reszta kodu jak poprzednio
+    } catch (error) {
+      console.error("Błąd ładowania kategorii:", error);
+    }
+  }
+
+  // Popraw również inne funkcje używające await
+  async function showCategory(categoryId, categoryName) {
+    // podobnie dodaj async i try-catch
+  }
+
 /* ==== Supabase init ==== */
 const SUPABASE_URL = "https://jjmnacolebxsifmnmqks.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqbW5hY29sZWJ4c2lmbW5tcWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3OTcyNDQsImV4cCI6MjA3MTM3MzI0NH0.1hNoBQ4wDuA_t_vscorQ6FRb-aW8IxHEDxuZKEhndv0";
