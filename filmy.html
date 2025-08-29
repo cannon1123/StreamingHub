@@ -29,6 +29,14 @@
     textarea,input,select{width:100%;padding:10px;background:#0e1218;border:1px solid var(--border);color:#fff;border-radius:10px}
     footer{color:var(--muted);text-align:center;padding:30px 0}
     .hidden{display:none}
+    .buy-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
     /* video */
     .video-container{position:relative;width:100%;padding-bottom:56.25%;height:0;overflow:hidden;background:black;border-radius:22px}
     .video-container iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
@@ -199,6 +207,52 @@ async function getWatchHistory(userId, limit=100){
     .order("watched_at", { ascending:false })
     .limit(limit);
   if(error) throw error; return data||[];
+}
+
+async function buyMovie(movieId, pointsRequired, megaUrl) {
+  const userId = getCurrentUserId(); // Zakładam, że masz funkcję zwracającą aktualne ID użytkownika
+
+  // Pobierz dane użytkownika
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('points')
+    .eq('id', userId)
+    .single();
+
+  if (userError || !user) {
+    alert('Nie udało się pobrać danych użytkownika.');
+    return;
+  }
+
+  // Sprawdź, czy użytkownik ma wystarczającą liczbę punktów
+  if (user.points < pointsRequired) {
+    alert('Masz za mało punktów, aby kupić ten film.');
+    return;
+  }
+
+  // Odejmij punkty
+  const { error: updateError } = await supabase
+    .from('users')
+    .update({ points: user.points - pointsRequired })
+    .eq('id', userId);
+
+  if (updateError) {
+    alert('Nie udało się zaktualizować punktów.');
+    return;
+  }
+
+  // Dodaj wpis do tabeli unlocks
+  const { error: insertError } = await supabase
+    .from('unlocks')
+    .insert([{ user_id: userId, movie_id: movieId }]);
+
+  if (insertError) {
+    alert('Nie udało się odblokować filmu.');
+    return;
+  }
+
+  // Odśwież przycisk, by zmienił się na „Oglądaj”
+  renderMovieButton(movieId, pointsRequired, megaUrl);
 }
 
 // Points & unlocks
