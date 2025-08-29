@@ -348,7 +348,16 @@ const UI = {
           <div>
             <h1>${escapeHtml(m.title)}</h1>
             <div class="small">Rok: ${m.year||"?"} • Długość: ${m.duration||"?"} min</div>
-            ${m.points_required ? `<div class="mt-2 alert">Wymagane punkty do odblokowania: <b>${m.points_required}</b></div>` : ""}
+            ${m.points_required ? `
+    <div class="mt-2 alert">
+    Dostęp za: <b>${m.points_required}</b> pkt
+    ${me && !(await isUnlocked(me.id, m.id)) ? `
+      <button class="btn mt-2" onclick="UI.buyMovie(${m.id}, ${m.points_required})">
+        Kup dostęp
+      </button>
+    ` : ""}
+  </div>` : ""}
+
           </div>
           <div class="flex">
             ${me ? `<button class="btn secondary" onclick="UI.onToggleWishlist(${m.id})">Chcę obejrzeć</button>` : ""}
