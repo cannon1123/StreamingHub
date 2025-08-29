@@ -43,7 +43,7 @@
       <input type="search" name="q" placeholder="Szukaj filmów…" />
     </form>
     <nav class="menu flex">
-      <a href="#" onclick="UI.show('home')">Filmy</a>
+      <a id="filmLink" href="#" onclick="UI.show('home')">Filmy</a>
       <a href="#" onclick="UI.show('top')">TOP</a>
       <a href="#" onclick="UI.show('me')">Moja biblioteka</a>
       <a id="adminLink" href="#" onclick="UI.show('admin')" class="hidden">Admin</a>
@@ -289,6 +289,16 @@ const UI = {
     document.getElementById("adminLink").classList.toggle("hidden", !(u&&u.is_admin));
     document.getElementById("logoutForm").classList.toggle("hidden", !u);
     document.getElementById("authLinks").classList.toggle("hidden", !!u);
+      // podmień przycisk "Filmy" w zależności od logowania
+  const filmLink = document.getElementById("filmLink");
+  if (u) {
+    filmLink.setAttribute("href", "filmy.html");
+    filmLink.removeAttribute("onclick");
+  } else {
+    filmLink.setAttribute("href", "#");
+    filmLink.setAttribute("onclick", "UI.show('home')");
+  }
+
   },
   async show(view, params={}){
     const app = UI.el();
