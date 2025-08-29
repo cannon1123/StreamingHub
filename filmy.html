@@ -638,6 +638,25 @@ const UI = {
     await addComment(movieId, me.id, text.slice(0,2000));
     UI.show('movie',{id:movieId});
   },
+    async buyMovie(movieId, cost){
+    const me = await Auth.currentProfile();
+    if(!me) return UI.show("login");
+
+    const have = await getPoints(me.id);
+    if(have < cost){
+      return toast("❌ Masz za mało punktów");
+    }
+
+    // odejmij punkty
+    await addPoints(me.id, -cost, `Zakup filmu #${movieId}`);
+
+    // zapisz odblokowanie
+    await ensureUnlocked(me.id, movieId);
+
+    toast("✔️ Film odblokowany!");
+    UI.show("movie", { id: movieId }); // odśwież widok
+  },
+
 
   async saveBio(username){
     const me = await Auth.currentProfile(); if(!me) return;
