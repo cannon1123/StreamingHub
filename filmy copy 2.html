@@ -19,7 +19,7 @@
     .badge{font-size:12px;color:#fff;background:#2a3446;padding:2px 8px;border-radius:999px}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
     .card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
-    .card.p{padding:12px;border:0}
+    .card.p{padding:12px}
     .card img{width:100%;height:200px;object-fit:cover;display:block}
     .small{font-size:12px;color:var(--muted)}
     .alert{background:#152031;padding:10px;border-radius:10px;color:#0e1218;margin:8px 0}
@@ -209,20 +209,26 @@ async function getWatchHistory(userId, limit=100){
   if(error) throw error; return data||[];
 }
 
-async function buyMovie(movieId, pointsRequired, megaUrl) {
-  const userId = getCurrentUserId(); // Zakładam, że masz funkcję zwracającą aktualne ID użytkownika
+UI.buyMovie = async function(movieId, cost){
+  const me = await Auth.currentProfile();
+  if(!me) return UI.show("login");
 
-  // Pobierz dane użytkownika
-  const { data: user, error: userError } = await supabase
-    .from('users')
-    .select('points')
-    .eq('id', userId)
-    .single();
-
-  if (userError || !user) {
-    alert('Nie udało się pobrać danych użytkownika.');
-    return;
+  const have = await getPoints(me.id);
+  if(have < cost){
+    return toast("❌ Masz za mało punktów");
   }
+
+  // odejmij punkty + log
+  await addPoints(me.id, -cost, `Zakup filmu #${movieId}`);
+
+  // zapisz odblokowanie
+  await ensureUnlocked(me.id, movieId);
+
+  toast("✔️ Film odblokowany!");
+  UI.show("movie", { id: movieId }); // odśwież widok
+};
+
+
 
   // Sprawdź, czy użytkownik ma wystarczającą liczbę punktów
   if (user.points < pointsRequired) {
@@ -253,7 +259,7 @@ async function buyMovie(movieId, pointsRequired, megaUrl) {
 
   // Odśwież przycisk, by zmienił się na „Oglądaj”
   renderMovieButton(movieId, pointsRequired, megaUrl);
-}
+
 
 // Points & unlocks
 async function addPoints(userId, change, reason){
