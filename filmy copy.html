@@ -19,7 +19,7 @@
     .badge{font-size:12px;color:#fff;background:#2a3446;padding:2px 8px;border-radius:999px}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
     .card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
-    .card.p{padding:12px}
+    .card.p{padding:12px;border:0}
     .card img{width:100%;height:200px;object-fit:cover;display:block}
     .small{font-size:12px;color:var(--muted)}
     .alert{background:#152031;padding:10px;border-radius:10px;color:#0e1218;margin:8px 0}
@@ -209,51 +209,6 @@ async function getWatchHistory(userId, limit=100){
   if(error) throw error; return data||[];
 }
 
-async function buyMovie(movieId, pointsRequired, megaUrl) {
-  const userId = getCurrentUserId(); // Zakładam, że masz funkcję zwracającą aktualne ID użytkownika
-
-  // Pobierz dane użytkownika
-  const { data: user, error: userError } = await supabase
-    .from('users')
-    .select('points')
-    .eq('id', userId)
-    .single();
-
-  if (userError || !user) {
-    alert('Nie udało się pobrać danych użytkownika.');
-    return;
-  }
-
-  // Sprawdź, czy użytkownik ma wystarczającą liczbę punktów
-  if (user.points < pointsRequired) {
-    alert('Masz za mało punktów, aby kupić ten film.');
-    return;
-  }
-
-  // Odejmij punkty
-  const { error: updateError } = await supabase
-    .from('users')
-    .update({ points: user.points - pointsRequired })
-    .eq('id', userId);
-
-  if (updateError) {
-    alert('Nie udało się zaktualizować punktów.');
-    return;
-  }
-
-  // Dodaj wpis do tabeli unlocks
-  const { error: insertError } = await supabase
-    .from('unlocks')
-    .insert([{ user_id: userId, movie_id: movieId }]);
-
-  if (insertError) {
-    alert('Nie udało się odblokować filmu.');
-    return;
-  }
-
-  // Odśwież przycisk, by zmienił się na „Oglądaj”
-  renderMovieButton(movieId, pointsRequired, megaUrl);
-}
 
 // Points & unlocks
 async function addPoints(userId, change, reason){
@@ -421,9 +376,17 @@ const UI = {
         <div class="mt-4"><p>${escapeHtml(m.description||"")}</p></div>
 
         <div class="mt-4">
-          ${me ? (canWatch ? `<a class="btn" href="#" onclick="UI.show('watch',{id:${m.id}})">Oglądaj</a>` :
-            `<button class="btn" onclick="UI.unlock(${m.id})">Odblokuj za punkty</button> <span class="small">Masz: <span id="myPoints">…</span> pkt</span>`) :
-            `<a class="btn" href="#" onclick="UI.show('login')">Zaloguj, aby oglądać</a>`}
+  ${me ? (
+      canWatch
+        ? `<a class="btn" href="#" onclick="UI.show('watch',{id:${m.id}})">▶️ Oglądaj</a>`
+        : `<button class="btn" onclick="UI.buyMovie(${m.id}, ${m.points_required})">
+             Kup za ${m.points_required} pkt
+           </button>
+           <span class="small">Masz: <span id="myPoints">…</span> pkt</span>`
+    ) :
+    `<a class="btn" href="#" onclick="UI.show('login')">Zaloguj, aby oglądać</a>`}
+</div>
+
         </div>
 
         <hr class="mt-8">
@@ -703,6 +666,7 @@ const UI = {
 
     // odejmij punkty
     await addPoints(me.id, -cost, `Zakup filmu #${movieId}`);
+    await ensureUnlocked(me.id, movieId);
 
     // zapisz odblokowanie
     await ensureUnlocked(me.id, movieId);
