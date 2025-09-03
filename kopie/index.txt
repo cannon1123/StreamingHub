@@ -68,15 +68,9 @@
 /* =========================
    KONFIG: PODMIEŃ NA SWOJE
    ========================= */
-async function getMovies() {
-  const res = await fetch('/api/supabase');
-  return res.json();
-}
-
-getMovies().then(data => {
-  console.log('Filmy:', data);
-});
-
+const SUPABASE_URL = "https://jjmnacolebxsifmnmqks.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpqbW5hY29sZWJ4c2lmbW5tcWtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3OTcyNDQsImV4cCI6MjA3MTM3MzI0NH0.1hNoBQ4wDuA_t_vscorQ6FRb-aW8IxHEDxuZKEhndv0";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* =========================
    UTILS
