@@ -10,9 +10,6 @@
 
 <script>
 (function(){
-  // Anti-debugging protection (simplified)
-  var blocked = ['keydown','contextmenu','preventDefault','F12','ctrlKey','shiftKey'];
-  
   document.addEventListener('keydown', function(e) {
     var shortcuts = [
       {key: 'F12'},
@@ -38,24 +35,6 @@
     return false;
   });
   
-  // DevTools detection (less aggressive)
-  var devtools = {open: false};
-  setInterval(function() {
-    if(window.outerHeight - window.innerHeight > 200 || 
-       window.outerWidth - window.innerWidth > 200) {
-      if(!devtools.open) {
-        devtools.open = true;
-        // Only redirect after 3 seconds to avoid false positives
-        setTimeout(() => {
-          if(devtools.open) {
-            window.location.href = 'https://google.com';
-          }
-        }, 3000);
-      }
-    } else {
-      devtools.open = false;
-    }
-  }, 2000);
 })();
 </script>
 
