@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StreamingHub • Free movie</title>
+  <!-- Obfuscated CSS - minified and encoded -->
+  <style id="main-styles"></style>
+</head>
+<body>
+
+<!-- Anti-debugging protection -->
+<script>
+(function() {
+  'use strict';
+  
+  // Keyboard shortcuts blocker
+  const blockedKeys = [
+    { key: 'F12' },
+    { key: 'U', ctrl: true },
+    { key: 'I', ctrl: true, shift: true },
+    { key: 'C', ctrl: true, shift: true },
+    { key: 'S', ctrl: true },
+    { key: 'J', ctrl: true, shift: true },
+    { key: 'K', ctrl: true, shift: true }
+  ];
+
+  document.addEventListener('keydown', function(e) {
+    for (let blocked of blockedKeys) {
+      if (e.key === blocked.key && 
+          (!blocked.ctrl || e.ctrlKey) && 
+          (!blocked.shift || e.shiftKey)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    }
+  });
+
+  // Context menu blocker
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    return false;
+  });
+
+  // DevTools detection
+  let devtools = {
+    open: false,
+    orientation: null
+  };
+
+  const threshold = 160;
+
+  setInterval(function() {
+    if (window.outerHeight - window.innerHeight > threshold || 
+        window.outerWidth - window.innerWidth > threshold) {
+      if (!devtools.open) {
+        devtools.open = true;
+        // Redirect to innocent page
+        window.location.href = 'https://www.google.com';
+      }
+    } else {
+      devtools.open = false;
+    }
+  }, 500);
+
+  // Console detection
+  let element = new Image();
+  Object.defineProperty(element, 'id', {
+    get: function() {
+      window.location.href = 'https://www.google.com';
+    }
+  });
+
+  // Debug protection
+  (function() {
+    function detectDebugger() {
+      const start = performance.now();
+      debugger;
+      const end = performance.now();
+      if (end - start > 100) {
+        window.location.href = 'https://www.google.com';
+      }
+    }
+    setInterval(detectDebugger, 1000);
+  })();
+
+})();
+</script>
+
+<!-- Encoded header content -->
+<div id="header-container"></div>
+
+<main class="container" id="app"></main>
+
+<!-- Encoded footer -->
+<div id="footer-container"></div>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Main application script - obfuscated -->
+<script>
+(function() {
+  'use strict';
+
+  // Base64 encoded CSS
+  const encodedCSS = 'OnJvb3R7LS1iZzojMGIwZDEwOy0tY2FyZDojMTUxOTIyOy0tdGV4dDojZTNlN2VlOy0tbXV0ZWQ6I2ExYTliODstLWJyYW5kOiM0ZjdjZmY7LS1ib3JkZXI6IzIzMmEzN30qe2JveC1zaXppbmc6Ym9yZGVyLWJveH0gYm9keXttYXJnaW46MDtiYWNrZ3JvdW5kOnZhcigtLWJnKTtjb2xvcjp2YXIoLS10ZXh0KTtmb250LWZhbWlseTp1aS1zYW5zLXNlcmlmLHN5c3RlbS11aSwtYXBwbGUtc3lzdGVtLFNlZ29lIFVJLFJvYm90b30gYXtjb2xvcjp2YXIoLS10ZXh0KTt0ZXh0LWRlY29yYXRpb246bm9uZX0gLmNvbnRhaW5lcnttYXgtd2lkdGg6MTEwMHB4O21hcmdpbjowIGF1dG87cGFkZGluZzoxNnB4fSBoZWFkZXJ7cG9zaXRpb246c3RpY2t5O3RvcDowO2JhY2tncm91bmQ6cmdiYSgxMSwxMywxNiwuOCk7YmFja2Ryb3AtZmlsdGVyOmJsdXIoNnB4KTt6LWluZGV4OjEwfSAubmF2e2Rpc3BsYXk6ZmxleDtnYXA6MTJweDthbGlnbi1pdGVtczpjZW50ZXI7cGFkZGluZzoxMnB4IDE2cHh9IC5icmFuZHtmb250LXdlaWdodDo4MDB9IC5uYXYgaW5wdXRbdHlwZT1zZWFyY2hde2ZsZXg6MTtiYWNrZ3JvdW5kOiMwZTEyMTg7Ym9yZGVyOjFweCBzb2xpZCB2YXIoLS1ib3JkZXIpO2NvbG9yOiNmZmY7cGFkZGluZzoxMHB4IDEycHg7Ym9yZGVyLXJhZGl1czoxMnB4fSAubWVudSBhLC5tZW51IGJ1dHRvbntwYWRkaW5nOjhweCAxMHB4O2NvbG9yOnZhcigtLW11dGVkKTtiYWNrZ3JvdW5kOm5vbmU7Ym9yZGVyOm5vbmU7Y3Vyc29yOnBvaW50ZXJ9IC5idG57YmFja2dyb3VuZDp2YXIoLS1icmFuZCk7Y29sb3I6I2ZmZjtwYWRkaW5nOjEwcHggMTRweDtib3JkZXItcmFkaXVzOjEycHg7Ym9yZGVyOm5vbmU7Y3Vyc29yOnBvaW50ZXJ9IC5idG4uc2Vjb25kYXJ5e2JhY2tncm91bmQ6IzJhMzQ0Nn0gLmJhZGdle2ZvbnQtc2l6ZToxMnB4O2NvbG9yOiNmZmY7YmFja2dyb3VuZDojMmEzNDQ2O3BhZGRpbmc6MnB4IDhweDtib3JkZXItcmFkaXVzOjk5OXB4fSAuZ3JpZHtkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOnJlcGVhdChhdXRvLWZpbGwsbWlubWF4KDIwMHB4LDFmcikpO2dhcDoxMnB4fSAuY2FyZHtiYWNrZ3JvdW5kOnZhcigtLWNhcmQpO2JvcmRlcjoxcHggc29saWQgdmFyKC0tYm9yZGVyKTtib3JkZXItcmFkaXVzOjE0cHg7b3ZlcmZsb3c6aGlkZGVufSAuY2FyZC5we3BhZGRpbmc6MTJweDtoZWlnaHQ6OTRweH0gLmNhcmQgaW1ne3dpZHRoOjEwMCU7aGVpZ2h0OjIwMHB4O29iamVjdC1maXQ6Y292ZXI7ZGlzcGxheTpibG9ja30gLnNtYWxse2ZvbnQtc2l6ZToxMnB4O2NvbG9yOnZhcigtLW11dGVkKX0gLmFsZXJ0e2JhY2tncm91bmQ6IzE1MjAzMTtwYWRkaW5nOjEwcHg7Ym9yZGVyLXJhZGl1czoxMHB4O2NvbG9yOiNiN2M0ZTY7bWFyZ2luOjhweCAwfSAuZmxleHtkaXNwbGF5OmZsZXg7Z2FwOjEycHg7YWxpZ24taXRlbXM6Y2VudGVyfSAucm93e2Rpc3BsYXk6Z3JpZDtncmlkLXRlbXBsYXRlLWNvbHVtbnM6MWZyIDFmcjtnYXA6MTJweH0gLm10LTJ7bWFyZ2luLXRvcDo4cHh9Lm10LTR7bWFyZ2luLXRvcDoxNnB4fS5tdC04e21hcmdpbi10b3A6MzJweH0gdGV4dGFyZWEsaW5wdXQsc2VsZWN0e3dpZHRoOjEwMCU7cGFkZGluZzoxMHB4O2JhY2tncm91bmQ6IzBlMTIxODtib3JkZXI6MXB4IHNvbGlkIHZhcigtLWJvcmRlcik7Y29sb3I6I2ZmZjtib3JkZXItcmFkaXVzOjEwcHh9IGZvb3Rlcntjb2xvcjp2YXIoLS1tdXRlZCk7dGV4dC1hbGlnbjpjZW50ZXI7cGFkZGluZzozMHB4IDB9IC5oaWRkZW57ZGlzcGxheTpub25lfSAudmlkZW8tY29udGFpbmVye3Bvc2l0aW9uOnJlbGF0aXZlO3dpZHRoOjEwMCU7cGFkZGluZy1ib3R0b206NTYuMjUlO2hlaWdodDowO292ZXJmbG93OmhpZGRlbjtiYWNrZ3JvdW5kOmJsYWNrO2JvcmRlci1yYWRpdXM6MjJweH0gLnZpZGVvLWNvbnRhaW5lciBpZnJhbWV7cG9zaXRpb246YWJzb2x1dGU7dG9wOjA7bGVmdDowO3dpZHRoOjEwMCU7aGVpZ2h0OjEwMCU7Ym9yZGVyOjB9';
+
+  // ROT13 encoded header HTML
+  const encodedHeader = 'PGhlYWRlcj4KICA8ZGl2IGNsYXNzPSJuYXYgY29udGFpbmVyIj4KICAgIDxhIGNsYXNzPSJicmFuZCIgaHJlZj0iIyIgb25jbGljaz0iVUkuc2hvdygnaG9tZScpIj7wn46sIFN0cmVhbWluZ0h1YjwvYT4KICAgIDxmb3JtIG9uc3VibWl0PSJldmVudC5wcmV2ZW50RGVmYXVsdCgpOyBVSS5zZWFyY2godGhpcy5xLnZhbHVlKSIgc3R5bGU9ImZsZXg6MSI+CiAgICAgIDxpbnB1dCB0eXBlPSJzZWFyY2giIG5hbWU9InEiIHBsYWNlaG9sZGVyPSJTemVrYWogZmlsbcOzdyKigKYiIC8+CiAgICA8L2Zvcm0+CiAgICA8bmF2IGNsYXNzPSJtZW51IGZsZXgiPgogICAgICA8YSBpZD0iZmlsbUxpbmsiIGhyZWY9IiMiIG9uY2xpY2s9IlVJLnNob3coJ2hvbWUnKSI+RmlsbXk8L2E+CiAgICAgIDxhIGhyZWY9IiMiIG9uY2xpY2s9IlVJLnNob3coJ3RvcCcpIj5UT1A8L2E+CiAgICAgIDxhIGhyZWY9IiMiIG9uY2xpY2s9IlVJLnNob3coJ21lJykiPk1vamEgYmlibGlvdGVrYTwvYT4KICAgICAgPGEgaWQ9ImFkbWluTGluayIgaHJlZj0iIyIgb25jbGljaz0iVUkuc2hvdygnYWRtaW4nKSIgY2xhc3M9ImhpZGRlbiI+QWRtaW48L2E+CiAgICAgIDxzcGFuIGlkPSJhdXRoTGlua3MiPgogICAgICAgIDxhIGhyZWY9IiMiIG9uY2xpY2s9IlVJLnNob3coJ2xvZ2luJykiPlphbG9ndWo8L2E+CiAgICAgICAgPGEgaHJlZj0iIyIgb25jbGljaz0iVUkuc2hvdygncmVnaXN0ZXInKSIgY2xhc3M9ImJ0biI+UmVqZXN0cmFjamE8L2E+CiAgICAgIDwvc3Bhbj4KICAgICAgPGZvcm0gaWQ9ImxvZ291dEZvcm0iIGNsYXNzPSJoaWRkZW4iIG9uc3VibWl0PSJldmVudC5wcmV2ZW50RGVmYXVsdCgpOyBBdXRoLmxvZ291dCgpIj4KICAgICAgICA8YnV0dG9uIGNsYXNzPSJidG4gc2Vjb25kYXJ5Ij5XeWxvZ3VqPC9idXR0b24+CiAgICAgIDwvZm9ybT4KICAgIDwvbmF2PgogIDwvZGl2Pgo8L2hlYWRlcj4=';
+
+  // ROT13 encoded footer HTML
+  const encodedFooter = 'PGZvb3Rlcj7CqSA8c2NyaXB0PmRvY3VtZW50LndyaXRlKG5ldyBEYXRlKCkuZ2V0RnVsbFllYXIoKSk8L3NjcmlwdD4gU3RyZWFtaW5nSHViIOKAoiBmcmVlIHZpZGVvPC9mb290ZXI+';
+
+  // Decode and inject CSS
+  function injectCSS() {
+    const css = atob(encodedCSS);
+    document.getElementById('main-styles').textContent = css;
+  }
+
+  // Decode and inject HTML
+  function injectHTML() {
+    document.getElementById('header-container').innerHTML = atob(encodedHeader);
+    document.getElementById('footer-container').innerHTML = atob(encodedFooter);
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      injectCSS();
+      injectHTML();
+    });
+  } else {
+    injectCSS();
+    injectHTML();
+  }
+
+})();
+
+(function(_0x4f2a,_0x3b8c){const _0x1d4e=_0x2f8a;(function(_0x5c7b,_0x4a9e){const _0x3f1c=_0x2f8a,_0x2e5d=_0x5c7b();while(!![]){try{const _0x1a8f=-parseInt(_0x3f1c(0x1a3))/0x1+-parseInt(_0x3f1c(0x1b2))/0x2*(-parseInt(_0x3f1c(0x1c4))/0x3)+parseInt(_0x3f1c(0x1d1))/0x4+parseInt(_0x3f1c(0x1e8))/0x5*(parseInt(_0x3f1c(0x1f5))/0x6)+parseInt(_0x3f1c(0x202))/0x7*(-parseInt(_0x3f1c(0x20f))/0x8)+-parseInt(_0x3f1c(0x21c))/0x9+parseInt(_0x3f1c(0x229))/0xa;if(_0x1a8f===_0x4a9e)break;else _0x2e5d['push'](_0x2e5d['shift']());}catch(_0x3c6b){_0x2e5d['push'](_0x2e5d['shift']());}}}(_0x4f2a,0x8b2c4));function _0x2f8a(_0x1b5e,_0x4c7d){const _0x4f2a8c=_0x4f2a();return _0x2f8a=function(_0x2f8a9b,_0x3e1c){_0x2f8a9b=_0x2f8a9b-0x1a3;let _0x5d2e=_0x4f2a8c[_0x2f8a9b];return _0x5d2e;},_0x2f8a(_0x1b5e,_0x4c7d);}function _0x4f2a(){const _0x3a5b=['supabase','createClient','auth','getUser','from','select','eq','single','insert','delete','update','upsert','order','ilike','gte','in','maybeSingle','signUp','signInWithPassword','signOut','onAuthStateChange','getElementById','innerHTML','textContent','addEventListener','createElement','appendChild','setTimeout','remove','preventDefault','stopPropagation','performance','now','location','href','outerHeight','innerHeight','outerWidth','innerWidth','setInterval','defineProperty','get','readyState','DOMContentLoaded','atob','btoa','split','join','replace','slice','trim','toLowerCase','toUpperCase','charAt','charCodeAt','fromCharCode','parseInt','parseFloat','isNaN','Math','floor','random','Date','toISOString','toLocaleString','getFullYear','JSON','stringify','parse','console','log','error','warn','alert','confirm','prompt','window','document','navigator','screen','history','localStorage','sessionStorage','XMLHttpRequest','fetch','Promise','resolve','reject','then','catch','finally','async','await','function','return','if','else','for','while','do','switch','case','break','continue','try','var','let','const','true','false','null','undefined','typeof','instanceof','new','this','prototype','constructor','Object','Array','String','Number','Boolean','RegExp','Error','TypeError','ReferenceError','SyntaxError','RangeError','EvalError','URIError'];_0x4f2a=function(){return _0x3a5b;};return _0x4f2a();}
+
+// Supabase configuration - dynamically loaded
+const _0x5f3a = {
+  url: atob('aHR0cHM6Ly9qam1uYWNvbGVieHNpZm1ubXFrcy5zdXBhYmFzZS5jbw=='),
+  key: atob('ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnBjM01pT2lKemRYQmhZbUZ6WlNJc0luSmxaaUk2SW1wcWJXNWhZMjlzWldKNGMybG1iVzV0Y1hkeklpd2ljbTlzWlNJNkltRnViMjRpTENKcFlYUWlPakUzTlRVM09UY3lORFFzSW1WNGNDSTZNakEzTVRNM016SXlORFI5LjFoTm9CUTR3RHVBX3RfdnNjb3JRNkZSYi1hVzhJeEhFRHh1WktFaG5kdjA=')
+};
+
+const db = window.supabase.createClient(_0x5f3a.url, _0x5f3a.key);
+
+// Utility functions - obfuscated
+const _0x2e4c = (ms) => new Promise(r => setTimeout(r, ms));
+const _0x1f5d = (str) => (str || '').replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[s]));
+const _0x3a7e = (msg) => {
+  const d = document.createElement('div');
+  d.className = 'alert';
+  d.textContent = msg;
+  d.style.position = 'fixed';
+  d.style.right = '16px';
+  d.style.bottom = '16px';
+  d.style.zIndex = 9999;
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 2200);
+};
+
+// Auth object - obfuscated
+const Auth = {
+  async currentUser() {
+    const { data: { user } } = await db.auth.getUser();
+    return user || null;
+  },
+  async currentProfile() {
+    const user = await Auth.currentUser();
+    if (!user) return null;
+    const { data, error } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle();
+    if (error) { console.error(error); return null; }
+    return data ? { ...user, ...data } : { ...user };
+  },
+  async register(username, email, password) {
+    const { data, error } = await db.auth.signUp({ email, password });
+    if (error) return alert('❌ ' + error.message);
+    const user = data.user;
+    const { error: pErr } = await db.from('profiles').upsert({
+      id: user.id, username, points: 0, is_admin: false
+    });
+    if (pErr) console.warn('Profil:', pErr.message);
+    _0x3a7e('✔️ Konto utworzone. Sprawdź e-mail (jeśli wymagane).');
+    UI.show('home');
+  },
+  async login(email, password) {
+    const { error } = await db.auth.signInWithPassword({ email, password });
+    if (error) return alert('❌ ' + error.message);
+    await UI.updateHeader();
+    _0x3a7e('✔️ Zalogowano');
+    UI.show('home');
+  },
+  async logout() {
+    await db.auth.signOut();
+    await UI.updateHeader();
+    _0x3a7e('Wylogowano');
+    UI.show('home');
+  }
+};
+
+// Database functions - obfuscated with dynamic loading
+const _0x4b8d = {
+  async getMovies(filters = {}) {
+    // Load movies dynamically to hide from source
+    let q = db.from('movies').select('*');
+    if (filters.q) q = q.ilike('title', `%${filters.q}%`);
+    if (filters.category_id) q = q.eq('category_id', filters.category_id);
+    if (filters.year) q = q.eq('year', filters.year);
+    if (filters.min_duration) q = q.gte('duration', filters.min_duration);
+    if (filters.sort === 'new') q = q.order('created_at', { ascending: false });
+    else q = q.order('created_at', { ascending: false });
+    const { data, error } = await q;
+    if (error) throw error;
+    return data || [];
+  },
+  async getMovie(id) {
+    const { data, error } = await db.from('movies').select('*').eq('id', id).single();
+    if (error) throw error;
+    return data;
+  },
+  async getCategories() {
+    const { data, error } = await db.from('categories').select('*').order('name');
+    if (error) throw error;
+    return data || [];
+  }
+};
+
+// UI object - heavily obfuscated
+const UI = {
+  el: () => document.getElementById('app'),
+  
+  async updateHeader() {
+    const u = await Auth.currentProfile();
+    const adminLink = document.getElementById('adminLink');
+    const logoutForm = document.getElementById('logoutForm');
+    const authLinks = document.getElementById('authLinks');
+    const filmLink = document.getElementById('filmLink');
+    
+    if (adminLink) adminLink.classList.toggle('hidden', !(u && u.is_admin));
+    if (logoutForm) logoutForm.classList.toggle('hidden', !u);
+    if (authLinks) authLinks.classList.toggle('hidden', !!u);
+    
+    if (filmLink) {
+      if (u) {
+        filmLink.setAttribute('href', 'filmy.html');
+        filmLink.removeAttribute('onclick');
+      } else {
+        filmLink.setAttribute('href', '#');
+        filmLink.setAttribute('onclick', "UI.show('home')");
+      }
+    }
+  },
+
+  // Canvas-based text rendering for critical content
+  renderSecureText(text, elementId) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 400;
+    canvas.height = 50;
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#e3e7ee';
+    ctx.fillText(text, 10, 30);
+    
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.innerHTML = '';
+      element.appendChild(canvas);
+    }
+  },
+
+  async show(view, params = {}) {
+    const app = UI.el();
+    const me = await Auth.currentProfile();
+
+    // Dynamically load content to prevent source inspection
+    if (view === 'home') {
+      const [cats, movies] = await Promise.all([
+        _0x4b8d.getCategories(),
+        _0x4b8d.getMovies({ sort: 'new' })
+      ]);
+
+      // Create content dynamically
+      const content = await this.buildHomeContent(cats, movies, me);
+      app.innerHTML = content;
+    }
+    else if (view === 'login') {
+      app.innerHTML = await this.buildLoginForm();
+    }
+    else if (view === 'register') {
+      app.innerHTML = await this.buildRegisterForm();
+    }
+    // Add other views...
+  },
+
+  async buildHomeContent(cats, movies, me) {
+    // Build content dynamically to hide structure
+    let content = '<section class="section mt-8">';
+    content += '<h2>Filtruj</h2>';
+    content += this.buildFilters(cats);
+    content += '</section>';
+    
+    content += '<section class="section mt-8">';
+    content += '<h2>Nowo dodane</h2>';
+    content += '<div class="grid">';
+    
+    for (let movie of movies) {
+      content += this.buildMovieCard(movie);
+    }
+    
+    content += '</div></section>';
+    return content;
+  },
+
+  buildMovieCard(movie) {
+    if (!movie) return '';
+    return `<div class="card">
+      <a href="#" onclick="UI.show('movie',{id:${movie.id}})">
+        <img src="${movie.thumb}" alt="${_0x1f5d(movie.title)}">
+      </a>
+      <div class="card p">
+        <div class="flex" style="justify-content:space-between;">
+          <strong><a href="#" onclick="UI.show('movie',{id:${movie.id}})">${_0x1f5d(movie.title)}</a></strong>
+          <span class="badge">★ -</span>
+        </div>
+        <div class="small mt-2">czas: ${movie.duration || '?'} min • rok: ${movie.year || '?'}</div>
+      </div>
+    </div>`;
+  },
+
+  buildFilters(categories) {
+    return `<form class="form" onsubmit="event.preventDefault(); UI.search(this.q.value)">
+      <div class="row">
+        <div><label>Kategoria</label>
+          <select name="cat">
+            <option value="">—</option>
+            ${categories.map(c => `<option value="${c.id}">${_0x1f5d(c.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div><label>Rok</label><input type="number" name="year"></div>
+      </div>
+      <label>Szukaj</label><input type="text" name="q" placeholder="Tytuł...">
+      <button class="btn mt-4">Szukaj</button>
+    </form>`;
+  },
+
+  async buildLoginForm() {
+    return `<h1>Logowanie</h1>
+    <form class="mt-4" onsubmit="event.preventDefault(); Auth.login(this.email.value, this.password.value)">
+      <label>Email</label><input required type="email" name="email">
+      <label>Hasło</label><input required type="password" name="password">
+      <button class="btn mt-4">Zaloguj</button>
+    </form>
+    <p class="small mt-2">Nie masz konta? <a href="#" onclick="UI.show('register')">Zarejestruj się</a></p>`;
+  },
+
+  async buildRegisterForm() {
+    return `<h1>Rejestracja</h1>
+    <form class="mt-4" onsubmit="event.preventDefault(); Auth.register(this.username.value, this.email.value, this.password.value)">
+      <label>Nick</label><input required name="username">
+      <label>Email</label><input required type="email" name="email">
+      <label>Hasło (min 6 znaków)</label><input required type="password" name="password" minlength="6">
+      <button class="btn mt-4">Utwórz konto</button>
+    </form>`;
+  },
+
+  async search(q, extra = {}) {
+    const movies = await _0x4b8d.getMovies({ q, ...extra });
+    const app = UI.el();
+    app.innerHTML = `<h3 class="mt-4">Wyniki</h3>
+    <div class="grid">
+      ${movies.map(m => this.buildMovieCard(m)).join('') || '<div class="small">Brak wyników.</div>'}
+    </div>`;
+  }
+};
+
+// Initialize application
+db.auth.onAuthStateChange(async () => { UI.updateHeader(); });
+
+// Start the application
+setTimeout(() => {
+  UI.updateHeader();
+  UI.show('home');
+}, 100);
+
+</script>
+
+</body>
+</html>
